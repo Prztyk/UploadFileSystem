@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload przez microservice</title>
+</head>
+<body>
+<h1>Upload pliku przez upload-service</h1>
+
+<form id="uploadForm">
+    <input type="file" name="file" required>
+    <button type="submit">Wyślij</button>
+</form>
+
+<p id="result"></p>
+
+<script>
+    const form = document.getElementById("uploadForm");
+    const result = document.getElementById("result");
+
+    form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const formData = new FormData(form);
+
+        const response = await fetch("http://localhost:8081/api/files/upload", {
+            method: "POST",
+            body: formData
+        });
+
+        result.textContent = await response.text();
+    });
+</script>
+</body>
+</html>
