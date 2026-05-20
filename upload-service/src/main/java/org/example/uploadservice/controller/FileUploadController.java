@@ -1,11 +1,14 @@
-package org.example.uploadservice;
+package org.example.uploadservice.controller;
 
+import org.example.uploadservice.entity.UploadedFile;
+import org.example.uploadservice.repository.UploadedFileRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.*;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -13,9 +16,11 @@ import java.util.stream.Stream;
 @RequestMapping("/api/files")
 public class FileUploadController {
 
+    private final UploadedFileRepository repository;
     private final Path uploadDir = Paths.get("uploads");
 
-    public FileUploadController() throws IOException {
+    public FileUploadController(UploadedFileRepository repository) throws IOException {
+        this.repository = repository;
         Files.createDirectories(uploadDir);
     }
 
@@ -32,6 +37,17 @@ public class FileUploadController {
 
         Path targetPath = uploadDir.resolve(safeFileName);
         Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+
+        UploadedFile uploadedFile = new UploadedFile();
+
+        uploadedFile.setOriginalFilename(originalName);
+        uploadedFile.setStoredFilename(safeFileName);
+        uploadedFile.setContentType(file.getContentType());
+        uploadedFile.setSize(file.getSize());
+        uploadedFile.setStatus("UPLOADED");
+        uploadedFile.setCreatedAt(LocalDateTime.now());
+
+        repository.save(uploadedFile);
 
         return ResponseEntity.ok("Plik zapisany przez upload-service: " + safeFileName);
     }
