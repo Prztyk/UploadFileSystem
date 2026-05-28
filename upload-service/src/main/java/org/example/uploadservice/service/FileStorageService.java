@@ -13,10 +13,16 @@ import java.time.LocalDateTime;
 public class FileStorageService {
 
     private final UploadedFileRepository repository;
+    private final DocumentProcessingService processingService;
     private final Path uploadDir = Paths.get("uploads");
 
-    public FileStorageService(UploadedFileRepository repository) throws IOException {
+    public FileStorageService(
+            UploadedFileRepository repository,
+            DocumentProcessingService processingService
+    ) throws IOException {
         this.repository = repository;
+        this.processingService = processingService;
+
         Files.createDirectories(uploadDir);
     }
 
@@ -44,6 +50,8 @@ public class FileStorageService {
         uploadedFile.setCreatedAt(LocalDateTime.now());
 
         repository.save(uploadedFile);
+
+        processingService.processFile(uploadedFile);
 
         return "Plik zapisany: " + safeFileName;
     }
