@@ -41,7 +41,7 @@ public class DocumentProcessingService {
 
             String text = Files.readString(filePath, StandardCharsets.UTF_8);
 
-            List<String> chunks = splitIntoChunks(text, 1000);
+            List<String> chunks = splitIntoChunks(text, 1000, 200);
 
             for (int i = 0; i < chunks.size(); i++) {
                 DocumentChunk chunk = new DocumentChunk();
@@ -67,25 +67,60 @@ public class DocumentProcessingService {
         }
     }
 
-    private List<String> splitIntoChunks(String text, int chunkSize) {
+    private List<String> splitIntoChunks(String text, int chunkSize, int overlapSize) {
         List<String> chunks = new ArrayList<>();
 
+        if (text == null || text.isBlank()) {
+            return chunks;
+        }
+
+        String normalizedText = text
+                .replace("\r\n", "\n")
+                .replace("\r", "\n")
+                .trim();
+
         int start = 0;
-        int chunkIndex = 0;
 
-        while (start < text.length()) {
-            int end = Math.min(start + chunkSize, text.length());
+        while (start < normalizedText.length()) {
+            int targetEnd = Math.min(start + chunkSize, normalizedText.length());
+            int end = findBestSplitPosition(normalizedText, start, targetEnd);
 
-            String chunk = text.substring(start, end).trim();
+            String chunk = normalizedText.substring(start, end).trim();
 
             if (!chunk.isEmpty()) {
                 chunks.add(chunk);
             }
 
-            start = end;
-            chunkIndex++;
+            if (end >= normalizedText.length()) {
+                break;
+            }
+
+            start = Math.max(0, end - overlapSize);
         }
 
         return chunks;
+    }
+
+    private int findBestSplitPosition(String text, int start, int targetEnd) {
+        if (targetEnd >= text.length()) {
+            return text.length();
+        }
+
+        int paragraphBreak = text.lastIndexOf("\n\n", targetEnd);
+        if (paragraphBreak > start) {
+            return paragraphBreak;
+        }
+
+        int lineBreak = text.lastIndexOf("\n", targetEnd);
+        if (lineBreak > start) {
+            return lineBreak;
+        }
+
+        int space = text.lastIndexOf(" ", targetEnd);
+        if (space > start) {
+            return space;
+        }
+
+        return targetEnd;
     }
 }
