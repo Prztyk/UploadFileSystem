@@ -9,6 +9,12 @@ Flow:
     HTTP response returned immediately
     ↓
     background processing starts
+    ↓
+    extract text with Tika
+    ↓
+    split into chunks
+    ↓
+    save chunks
 
 To do:  
 - Warning:(36, 15) Call to 'printStackTrace()' should probably be replaced with more robust logging  

@@ -7,8 +7,6 @@ import org.example.uploadservice.repository.UploadedFileRepository;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -19,15 +17,18 @@ public class DocumentProcessingService {
 
     private final DocumentChunkRepository chunkRepository;
     private final UploadedFileRepository fileRepository;
+    private final TextExtractionService textExtractionService;
 
     private final Path uploadDir = Path.of("uploads");
 
     public DocumentProcessingService(
             DocumentChunkRepository chunkRepository,
-            UploadedFileRepository fileRepository
+            UploadedFileRepository fileRepository,
+            TextExtractionService textExtractionService
     ) {
         this.chunkRepository = chunkRepository;
         this.fileRepository = fileRepository;
+        this.textExtractionService = textExtractionService;
     }
 
     @Async
@@ -39,7 +40,7 @@ public class DocumentProcessingService {
 
             Path filePath = uploadDir.resolve(uploadedFile.getStoredFilename());
 
-            String text = Files.readString(filePath, StandardCharsets.UTF_8);
+            String text = textExtractionService.extractText(filePath);
 
             List<String> chunks = splitIntoChunks(text, 1000, 200);
 
