@@ -19,6 +19,10 @@ public class DocumentProcessingService {
     private final UploadedFileRepository fileRepository;
     private final TextExtractionService textExtractionService;
 
+    private static final int CHUNK_SIZE = 1000;
+    private static final int CHUNK_OVERLAP = 200;
+    private static final int CHUNK_SEARCH_WINDOW = 300;
+
     private final Path uploadDir = Path.of("uploads");
 
     public DocumentProcessingService(
@@ -42,7 +46,7 @@ public class DocumentProcessingService {
 
             String text = textExtractionService.extractText(filePath);
 
-            List<String> chunks = splitIntoChunks(text, 1000, 200);
+            List<String> chunks = splitIntoChunks(text, CHUNK_SIZE, CHUNK_OVERLAP, CHUNK_SEARCH_WINDOW);
 
             for (int i = 0; i < chunks.size(); i++) {
                 DocumentChunk chunk = new DocumentChunk();
@@ -68,11 +72,19 @@ public class DocumentProcessingService {
         }
     }
 
-    private List<String> splitIntoChunks(String text, int chunkSize, int overlapSize) {
+    private List<String> splitIntoChunks(String text, int chunkSize, int overlapSize, int separatorSearchWindow) {
         List<String> chunks = new ArrayList<>();
 
         if (text == null || text.isBlank()) {
             return chunks;
+        }
+
+        if(overlapSize >= chunkSize) {
+            throw new IllegalArgumentException("overlapSize must be smaller than chunkSize");
+        }
+
+        if(separatorSearchWindow <= 0) {
+            throw new IllegalArgumentException("separatorSearchWindow must be greater than 0");
         }
 
         String normalizedText = text
@@ -84,7 +96,8 @@ public class DocumentProcessingService {
 
         while (start < normalizedText.length()) {
             int targetEnd = Math.min(start + chunkSize, normalizedText.length());
-            int end = findBestSplitPosition(normalizedText, start, targetEnd);
+
+            int end = findBestSplitPosition(normalizedText, start, targetEnd, separatorSearchWindow);
 
             String chunk = normalizedText.substring(start, end).trim();
 
@@ -102,23 +115,27 @@ public class DocumentProcessingService {
         return chunks;
     }
 
-    private int findBestSplitPosition(String text, int start, int targetEnd) {
+    private int findBestSplitPosition(String text, int start, int targetEnd, int separatorSearchWindow) {
         if (targetEnd >= text.length()) {
             return text.length();
         }
 
+        int windowStart = Math.max(start + 1, targetEnd - separatorSearchWindow);
+
+        //String newChunk = text.substring(start, targetEnd);
+
         int paragraphBreak = text.lastIndexOf("\n\n", targetEnd);
-        if (paragraphBreak > start) {
+        if (paragraphBreak >= windowStart) {
             return paragraphBreak;
         }
 
         int lineBreak = text.lastIndexOf("\n", targetEnd);
-        if (lineBreak > start) {
+        if (lineBreak >= windowStart) {
             return lineBreak;
         }
 
         int space = text.lastIndexOf(" ", targetEnd);
-        if (space > start) {
+        if (space >= windowStart) {
             return space;
         }
 
