@@ -1,22 +1,46 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Upload przez microservice</title>
+    <title>Semantic Search Upload</title>
 </head>
 <body>
-<h1>Upload pliku przez upload-service</h1>
+<h1>Upload file</h1>
 
 <form id="uploadForm">
     <input type="file" name="file" required>
-    <button type="submit">Wyślij</button>
+    <button type="submit">Upload</button>
 </form>
 
 <p id="result"></p>
 
+<h2>Upload history</h2>
+<button onclick="loadHistory()">Refresh history</button>
+
+<table border="1" cellpadding="6">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Original filename</th>
+        <th>Stored filename</th>
+        <th>Content type</th>
+        <th>Size</th>
+        <th>Status</th>
+        <th>Created at</th>
+        <th>Chunks</th>
+    </tr>
+    </thead>
+    <tbody id="historyBody"></tbody>
+</table>
+
+<h2>Chunks</h2>
+<div id="chunks"></div>
+
 <script>
     const form = document.getElementById("uploadForm");
     const result = document.getElementById("result");
+    const historyBody = document.getElementById("historyBody");
+    const chunksDiv = document.getElementById("chunks");
 
     form.addEventListener("submit", async function (event) {
         event.preventDefault();
@@ -29,7 +53,55 @@
         });
 
         result.textContent = await response.text();
+
+        await loadHistory();
     });
+
+    async function loadHistory() {
+        const response = await fetch("/files/history");
+        const files = await response.json();
+
+        historyBody.innerHTML = "";
+
+        for (const file of files) {
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td>${file.id}</td>
+                <td>${file.originalFilename}</td>
+                <td>${file.storedFilename}</td>
+                <td>${file.contentType}</td>
+                <td>${file.size}</td>
+                <td>${file.status}</td>
+                <td>${file.createdAt}</td>
+                <td>
+                    <button onclick="loadChunks(${file.id})">View chunks</button>
+                </td>
+            `;
+
+            historyBody.appendChild(row);
+        }
+    }
+
+    async function loadChunks(fileId) {
+        const response = await fetch(`/files/${fileId}/chunks`);
+        const chunks = await response.json();
+
+        chunksDiv.innerHTML = "";
+
+        for (const chunk of chunks) {
+            const block = document.createElement("pre");
+            block.style.border = "1px solid #ccc";
+            block.style.padding = "10px";
+            block.style.whiteSpace = "pre-wrap";
+
+            block.textContent = `Chunk ${chunk.chunkIndex}\n\n${chunk.content}`;
+
+            chunksDiv.appendChild(block);
+        }
+    }
+
+    loadHistory();
 </script>
 </body>
 </html>

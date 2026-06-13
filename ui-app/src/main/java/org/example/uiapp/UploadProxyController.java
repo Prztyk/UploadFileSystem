@@ -36,4 +36,24 @@ public class UploadProxyController {
 
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/files/history")
+    public ResponseEntity<String> getUploadHistory() {
+        String response = restClient.get()
+                .uri("/api/files/history")
+                .retrieve()
+                .body(String.class);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/files/{fileId}/chunks")
+    public ResponseEntity<String> getChunks(@PathVariable Long fileId) {
+        String response = restClient.get()
+                .uri("/api/files/{fileId}/chunks", fileId)
+                .retrieve()
+                .body(String.class);
+
+        return ResponseEntity.ok(response);
+    }
 }
