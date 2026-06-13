@@ -1,6 +1,7 @@
 package org.example.uploadservice.service;
 
 import org.example.uploadservice.entity.UploadedFile;
+import org.example.uploadservice.enums.UploadedFileStatus;
 import org.example.uploadservice.repository.UploadedFileRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -46,7 +47,7 @@ public class FileStorageService {
         uploadedFile.setStoredFilename(safeFileName);
         uploadedFile.setContentType(file.getContentType());
         uploadedFile.setSize(file.getSize());
-        uploadedFile.setStatus("UPLOADED");
+        uploadedFile.setStatus(UploadedFileStatus.UPLOADED);
         uploadedFile.setCreatedAt(LocalDateTime.now());
 
         repository.save(uploadedFile);

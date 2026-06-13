@@ -3,6 +3,7 @@ package org.example.uploadservice.service;
 import org.example.uploadservice.entity.DocumentChunk;
 import org.example.uploadservice.entity.UploadedFile;
 import org.example.uploadservice.entity.UploadedFileProcessingLog;
+import org.example.uploadservice.enums.UploadedFileStatus;
 import org.example.uploadservice.repository.DocumentChunkRepository;
 import org.example.uploadservice.repository.UploadedFileRepository;
 import org.example.uploadservice.repository.UploadedFileProcessingLogRepository;
@@ -45,9 +46,9 @@ public class DocumentProcessingService {
     public void processFile(UploadedFile uploadedFile) {
 
         try {
-            uploadedFile.setStatus("PROCESSING");
+            uploadedFile.setStatus(UploadedFileStatus.PROCESSING);
             fileRepository.save(uploadedFile);
-            saveLog(uploadedFile.getId(), "PROCESSING", "Processing started", null);
+            //saveLog(uploadedFile.getId(), UploadedFileStatus.PROCESSING, "Processing started", null);
 
             /*
             if (uploadedFile.getOriginalFilename().contains("fail")) {
@@ -71,18 +72,18 @@ public class DocumentProcessingService {
                 chunkRepository.save(chunk);
             }
 
-            uploadedFile.setStatus("PROCESSED");
+            uploadedFile.setStatus(UploadedFileStatus.PROCESSED);
             fileRepository.save(uploadedFile);
 
             System.out.println("Processing finished for file: " + uploadedFile.getId());
 
         } catch (Exception e) {
 
-            uploadedFile.setStatus("FAILED");
+            uploadedFile.setStatus(UploadedFileStatus.FAILED);
             fileRepository.save(uploadedFile);
             saveLog(
                     uploadedFile.getId(),
-                    "FAILED",
+                    UploadedFileStatus.FAILED,
                     e.getMessage(),
                     Arrays.toString(e.getStackTrace()));
         }
@@ -158,7 +159,7 @@ public class DocumentProcessingService {
         return targetEnd;
     }
 
-    private void saveLog(Long fileId, String status, String message, String stackTrace) {
+    private void saveLog(Long fileId, UploadedFileStatus status, String message, String stackTrace) {
         UploadedFileProcessingLog log = new UploadedFileProcessingLog();
         log.setFileId(fileId);
         log.setStatus(status);

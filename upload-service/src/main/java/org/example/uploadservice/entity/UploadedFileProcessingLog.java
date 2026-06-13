@@ -1,6 +1,7 @@
 package org.example.uploadservice.entity;
 
 import jakarta.persistence.*;
+import org.example.uploadservice.enums.UploadedFileStatus;
 
 import java.time.LocalDateTime;
 
@@ -14,7 +15,8 @@ public class UploadedFileProcessingLog {
 
     private Long fileId;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private UploadedFileStatus status;
 
     @Column(columnDefinition = "TEXT")
     private String message;
@@ -43,11 +45,11 @@ public class UploadedFileProcessingLog {
         this.fileId = fileId;
     }
 
-    public String getStatus() {
+    public UploadedFileStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(UploadedFileStatus status) {
         this.status = status;
     }
 
