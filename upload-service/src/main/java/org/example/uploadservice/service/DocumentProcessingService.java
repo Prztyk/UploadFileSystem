@@ -2,18 +2,15 @@ package org.example.uploadservice.service;
 
 import org.example.uploadservice.entity.DocumentChunk;
 import org.example.uploadservice.entity.UploadedFile;
-import org.example.uploadservice.entity.UploadedFileProcessingLog;
 import org.example.uploadservice.enums.UploadedFileStatus;
 import org.example.uploadservice.repository.DocumentChunkRepository;
 import org.example.uploadservice.repository.UploadedFileRepository;
-import org.example.uploadservice.repository.UploadedFileProcessingLogRepository;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -21,7 +18,6 @@ public class DocumentProcessingService {
 
     private final DocumentChunkRepository chunkRepository;
     private final UploadedFileRepository fileRepository;
-    private final UploadedFileProcessingLogRepository logRepository;
     private final TextExtractionService textExtractionService;
     private final LogProcessingService logProcessingService;
 
@@ -34,13 +30,11 @@ public class DocumentProcessingService {
     public DocumentProcessingService(
             DocumentChunkRepository chunkRepository,
             UploadedFileRepository fileRepository,
-            UploadedFileProcessingLogRepository logRepository,
             TextExtractionService textExtractionService,
             LogProcessingService logProcessingService
     ) {
         this.chunkRepository = chunkRepository;
         this.fileRepository = fileRepository;
-        this.logRepository = logRepository;
         this.textExtractionService = textExtractionService;
         this.logProcessingService = logProcessingService;
     }
