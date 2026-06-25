@@ -5,6 +5,8 @@ import org.example.uploadservice.enums.UploadedFileStatus;
 import org.example.uploadservice.repository.UploadedFileProcessingLogRepository;
 import org.springframework.stereotype.Service;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 
@@ -39,7 +41,7 @@ public class LogProcessingService {
                 fileId,
                 UploadedFileStatus.FAILED,
                 throwable.getMessage(),
-                Arrays.toString(throwable.getStackTrace())
+                stackTraceToString(throwable)
         );
     }
 
@@ -58,5 +60,14 @@ public class LogProcessingService {
         log.setCreatedAt(LocalDateTime.now());
 
         repository.save(log);
+    }
+
+    private String stackTraceToString(Throwable throwable) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+
+        throwable.printStackTrace(pw);
+
+        return sw.toString();
     }
 }
