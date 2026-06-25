@@ -84,12 +84,7 @@ public class DocumentProcessingService {
 
             uploadedFile.setStatus(UploadedFileStatus.FAILED);
             fileRepository.save(uploadedFile);
-            logProcessingService.log(
-                    uploadedFile.getId(),
-                    UploadedFileStatus.FAILED,
-                    e.getMessage(),
-                    Arrays.toString(e.getStackTrace())
-            );
+            logProcessingService.processingFailed(uploadedFile.getId(), e);
         }
     }
 
