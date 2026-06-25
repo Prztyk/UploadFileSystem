@@ -23,6 +23,7 @@ public class DocumentProcessingService {
     private final UploadedFileRepository fileRepository;
     private final UploadedFileProcessingLogRepository logRepository;
     private final TextExtractionService textExtractionService;
+    private final LogProcessingService logProcessingService;
 
     private static final int CHUNK_SIZE = 1000;
     private static final int CHUNK_OVERLAP = 200;
@@ -34,12 +35,14 @@ public class DocumentProcessingService {
             DocumentChunkRepository chunkRepository,
             UploadedFileRepository fileRepository,
             UploadedFileProcessingLogRepository logRepository,
-            TextExtractionService textExtractionService
+            TextExtractionService textExtractionService,
+            LogProcessingService logProcessingService
     ) {
         this.chunkRepository = chunkRepository;
         this.fileRepository = fileRepository;
         this.logRepository = logRepository;
         this.textExtractionService = textExtractionService;
+        this.logProcessingService = logProcessingService;
     }
 
     @Async
@@ -81,11 +84,12 @@ public class DocumentProcessingService {
 
             uploadedFile.setStatus(UploadedFileStatus.FAILED);
             fileRepository.save(uploadedFile);
-            saveLog(
+            logProcessingService.log(
                     uploadedFile.getId(),
                     UploadedFileStatus.FAILED,
                     e.getMessage(),
-                    Arrays.toString(e.getStackTrace()));
+                    Arrays.toString(e.getStackTrace())
+            );
         }
     }
 
@@ -158,16 +162,4 @@ public class DocumentProcessingService {
 
         return targetEnd;
     }
-
-    private void saveLog(Long fileId, UploadedFileStatus status, String message, String stackTrace) {
-        UploadedFileProcessingLog log = new UploadedFileProcessingLog();
-        log.setFileId(fileId);
-        log.setStatus(status);
-        log.setMessage(message);
-        log.setStackTrace(stackTrace);
-        log.setCreatedAt(LocalDateTime.now());
-
-        logRepository.save(log);
-    }
-
 }
