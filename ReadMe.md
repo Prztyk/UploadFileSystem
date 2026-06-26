@@ -39,3 +39,18 @@ To do:
 E:\Repo\Java\UploadFileSystem\upload-service\src\main\java\org\example\uploadservice\service\DocumentProcessingService.java
 - List of uploaded documents
 - private final Path uploadDir = Path.of("uploads"); in several places
+
+# Notes
+
+- docker compose down -v
+
+  Stop containers  
+  Remove containers  
+  Remove Docker network  
+  Remove volumes  
+  -v means remove volumes
+
+- docker compose up -d  
+
+   Create and start containers from docker-compose.yml  
+   Run them in the background
