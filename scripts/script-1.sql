@@ -20,6 +20,10 @@ select id, chunk_id, model_name, created_at
 from semantic_search.public.document_chunk_embeddings
 order by id desc;
 
+SELECT model_name, COUNT(*)
+FROM document_chunk_embeddings
+GROUP BY model_name;
+
 -- all tables
 
 SELECT table_name

@@ -44,6 +44,37 @@ E:\Repo\Java\UploadFileSystem\upload-service\src\main\java\org\example\uploadser
 - List of uploaded documents
 - private final Path uploadDir = Path.of("uploads"); in several places
 
+# Ollama
+
+1. commands
+   - pull  
+     
+         ollama pull nomic-embed-text
+   - list  
+
+         ollama list
+   - remove model  
+
+         ollama rm nomic-embed-text
+    
+   - test  
+     - Git Bash  
+      
+           curl http://localhost:11434/api/embeddings -d '{
+             "model": "nomic-embed-text",
+             "prompt": "The sky is blue because of Rayleigh scattering."
+           }'
+           
+           curl http://localhost:11434/api/embed -d "{\"model\":\"nomic-embed-text\",\"input\":\"This is a test sentence\"}"     
+
+     - Powershell  
+     
+           Invoke-RestMethod -Method Post -Uri "http://localhost:11434/api/embeddings" -Body (@{
+             model = "nomic-embed-text"
+             prompt = "The sky is blue because of Rayleigh scattering."
+           } | ConvertTo-Json)
+2. 
+
 # Notes
 
 ### docker commands
@@ -60,6 +91,7 @@ E:\Repo\Java\UploadFileSystem\upload-service\src\main\java\org\example\uploadser
 
 ### other
 
-1. EmbeddingPersistenceService
-
-        Used JdbcTemplate instead of JPA here, because VECTOR(1536) is a PostgreSQL/pgvector-specific type.
+1. EmbeddingPersistenceService  
+Used JdbcTemplate instead of JPA here, because VECTOR(1536) is a PostgreSQL/pgvector-specific type.
+2. First embedding model nomic-embed-text  
+It uses vector dimension 768, so i need to modify database -> V006__document_chunk_embeddings__change_embedding_dimension_to_768.sql

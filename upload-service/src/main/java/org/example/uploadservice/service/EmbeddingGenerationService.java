@@ -1,25 +1,67 @@
 package org.example.uploadservice.service;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 @Service
 public class EmbeddingGenerationService {
 
-    private static final int EMBEDDING_DIMENSION = 1536;
+    private final RestClient restClient;
+    private final String modelName;
+    private final int expectedDimension;
+
+    public EmbeddingGenerationService(
+            @Value("${ollama.base-url}") String ollamaBaseUrl,
+            @Value("${embedding.model}") String modelName,
+            @Value("${embedding.dimension}") int expectedDimension
+    ) {
+        this.restClient = RestClient.create(ollamaBaseUrl);
+        this.modelName = modelName;
+        this.expectedDimension = expectedDimension;
+    }
 
     public List<Double> generateEmbedding(String text) {
-        Random random = new Random(text.hashCode());
+        OllamaEmbedResponse response = restClient.post()
+                .uri("/api/embed")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new OllamaEmbedRequest(modelName, text))
+                .retrieve()
+                .body(OllamaEmbedResponse.class);
 
-        List<Double> embedding = new ArrayList<>();
+        if (response == null || response.embeddings() == null || response.embeddings().isEmpty()) {
+            throw new IllegalStateException("Ollama returned empty embedding response");
+        }
 
-        for (int i = 0; i < EMBEDDING_DIMENSION; i++) {
-            embedding.add(random.nextDouble(-1.0, 1.0));
+        List<Double> embedding = response.embeddings().get(0);
+
+        if (embedding.size() != expectedDimension) {
+            throw new IllegalStateException(
+                    "Unexpected embedding dimension. Expected "
+                            + expectedDimension
+                            + " but got "
+                            + embedding.size()
+            );
         }
 
         return embedding;
+    }
+
+    public String getModelName() {
+        return modelName;
+    }
+
+    private record OllamaEmbedRequest(
+            String model,
+            String input
+    ) {
+    }
+
+    private record OllamaEmbedResponse(
+            List<List<Double>> embeddings
+    ) {
     }
 }

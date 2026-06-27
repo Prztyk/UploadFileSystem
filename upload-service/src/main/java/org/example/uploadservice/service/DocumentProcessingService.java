@@ -78,7 +78,7 @@ public class DocumentProcessingService {
 
                 embeddingPersistenceService.saveEmbedding(
                         savedChunk.getId(),
-                        "fake-dev-embedding-v1",
+                        embeddingGenerationService.getModelName(),
                         embedding
                 );
             }
