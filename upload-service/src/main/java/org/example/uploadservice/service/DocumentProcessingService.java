@@ -20,6 +20,8 @@ public class DocumentProcessingService {
     private final UploadedFileRepository fileRepository;
     private final TextExtractionService textExtractionService;
     private final LogProcessingService logProcessingService;
+    private final EmbeddingGenerationService embeddingGenerationService;
+    private final EmbeddingPersistenceService embeddingPersistenceService;
 
     private static final int CHUNK_SIZE = 1000;
     private static final int CHUNK_OVERLAP = 200;
@@ -31,12 +33,16 @@ public class DocumentProcessingService {
             DocumentChunkRepository chunkRepository,
             UploadedFileRepository fileRepository,
             TextExtractionService textExtractionService,
-            LogProcessingService logProcessingService
+            LogProcessingService logProcessingService,
+            EmbeddingGenerationService embeddingGenerationService,
+            EmbeddingPersistenceService embeddingPersistenceService
     ) {
         this.chunkRepository = chunkRepository;
         this.fileRepository = fileRepository;
         this.textExtractionService = textExtractionService;
         this.logProcessingService = logProcessingService;
+        this.embeddingGenerationService = embeddingGenerationService;
+        this.embeddingPersistenceService = embeddingPersistenceService;
     }
 
     @Async
@@ -66,7 +72,15 @@ public class DocumentProcessingService {
                 chunk.setContent(chunks.get(i));
                 chunk.setCreatedAt(LocalDateTime.now());
 
-                chunkRepository.save(chunk);
+                DocumentChunk savedChunk = chunkRepository.save(chunk);
+
+                List<Double> embedding = embeddingGenerationService.generateEmbedding(savedChunk.getContent());
+
+                embeddingPersistenceService.saveEmbedding(
+                        savedChunk.getId(),
+                        "fake-dev-embedding-v1",
+                        embedding
+                );
             }
 
             uploadedFile.setStatus(UploadedFileStatus.PROCESSED);

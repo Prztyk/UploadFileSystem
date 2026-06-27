@@ -25,6 +25,10 @@ Backend flow:
     split into chunks
     ↓
     save chunks
+    ↓
+    generate fake embedding
+    ↓
+    save embedding into pgvector table
 
 # changes
 
@@ -42,15 +46,20 @@ E:\Repo\Java\UploadFileSystem\upload-service\src\main\java\org\example\uploadser
 
 # Notes
 
-- docker compose down -v
+### docker commands
 
-  Stop containers  
-  Remove containers  
-  Remove Docker network  
-  Remove volumes  
-  -v means remove volumes
+1. Stop containers, Remove containers, Remove Docker network, Remove volumes
 
-- docker compose up -d  
 
-   Create and start containers from docker-compose.yml  
-   Run them in the background
+    docker compose down -v  
+    -v means remove volumes
+2. Create and start containers from docker-compose.yml, Run them in the background 
+
+
+    docker compose up -d  
+
+### other
+
+1. EmbeddingPersistenceService
+
+        Used JdbcTemplate instead of JPA here, because VECTOR(1536) is a PostgreSQL/pgvector-specific type.

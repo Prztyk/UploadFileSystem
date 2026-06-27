@@ -1,3 +1,4 @@
+-- just table queries
 select * 
 from semantic_search.public.uploaded_files uf 
 order by id desc;
@@ -6,11 +7,27 @@ select *
 from semantic_search.public.document_chunks dc  
 order by id desc;
 
-select * from semantic_search.public.uploaded_file_processing_logs ufpl ;
+select * from semantic_search.public.uploaded_file_processing_logs ufpl;
 
-SELECT *
-FROM semantic_search.public.flyway_schema_history
-ORDER BY installed_rank;
+select *
+from semantic_search.public.flyway_schema_history
+order by installed_rank;
+
+select *
+from semantic_search.public.document_chunk_embeddings dce;
+
+select id, chunk_id, model_name, created_at
+from semantic_search.public.document_chunk_embeddings
+order by id desc;
+
+-- all tables
+
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public'
+ORDER BY table_name;
+
+-- specific queries
 
 select * 
 from semantic_search.public.uploaded_files uf 
