@@ -56,4 +56,21 @@ public class UploadProxyController {
 
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<String> search(
+            @RequestParam String query,
+            @RequestParam(defaultValue = "5") int limit
+    ) {
+        String response = restClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/search")
+                        .queryParam("query", query)
+                        .queryParam("limit", limit)
+                        .build())
+                .retrieve()
+                .body(String.class);
+
+        return ResponseEntity.ok(response);
+    }
 }

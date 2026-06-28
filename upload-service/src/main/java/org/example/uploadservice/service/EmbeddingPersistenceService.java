@@ -5,19 +5,23 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class EmbeddingPersistenceService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final PgVectorFormatService pgVectorFormatService;
 
-    public EmbeddingPersistenceService(JdbcTemplate jdbcTemplate) {
+    public EmbeddingPersistenceService(
+            JdbcTemplate jdbcTemplate,
+            PgVectorFormatService pgVectorFormatService
+    ) {
         this.jdbcTemplate = jdbcTemplate;
+        this.pgVectorFormatService = pgVectorFormatService;
     }
 
     public void saveEmbedding(Long chunkId, String modelName, List<Double> embedding) {
-        String vectorValue = toPgVectorValue(embedding);
+        String vectorValue = pgVectorFormatService.toPgVectorValue(embedding);
 
         jdbcTemplate.update(
                 """
@@ -38,11 +42,5 @@ public class EmbeddingPersistenceService {
                 vectorValue,
                 LocalDateTime.now()
         );
-    }
-
-    private String toPgVectorValue(List<Double> embedding) {
-        return embedding.stream()
-                .map(String::valueOf)
-                .collect(Collectors.joining(",", "[", "]"));
     }
 }

@@ -26,9 +26,17 @@ Backend flow:
     ↓
     save chunks
     ↓
-    generate fake embedding
+    generate Ollama embedding
     ↓
     save embedding into pgvector table
+    ↓
+    search query
+    ↓
+    generate query embedding with Ollama
+    ↓
+    compare query vector with stored chunk vectors
+    ↓
+    return best matching chunks
 
 # changes
 
