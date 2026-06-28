@@ -36,6 +36,30 @@
 <h2>Chunks</h2>
 <div id="chunks"></div>
 
+<h2>Semantic search</h2>
+
+<form id="searchForm">
+    <input
+            type="text"
+            id="searchQuery"
+            placeholder="Search in uploaded documents..."
+            required
+            style="width: 400px;"
+    >
+
+    <input
+            type="number"
+            id="searchLimit"
+            value="5"
+            min="1"
+            max="20"
+    >
+
+    <button type="submit">Search</button>
+</form>
+
+<div id="searchResults"></div>
+
 <script>
     const form = document.getElementById("uploadForm");
     const result = document.getElementById("result");
@@ -102,6 +126,73 @@
     }
 
     loadHistory();
+
+    const searchForm = document.getElementById("searchForm");
+    const searchQuery = document.getElementById("searchQuery");
+    const searchLimit = document.getElementById("searchLimit");
+    const searchResults = document.getElementById("searchResults");
+
+    searchForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const query = searchQuery.value;
+        const limit = searchLimit.value;
+
+        const response = await fetch(
+            `/search?query=${encodeURIComponent(query)}&limit=${encodeURIComponent(limit)}`
+        );
+
+        const results = await response.json();
+
+        renderSearchResults(results);
+    });
+
+    function renderSearchResults(results) {
+        searchResults.innerHTML = "";
+
+        if (results.length === 0) {
+        searchResults.textContent = "No results found.";
+        return;
+    }
+
+    const table = document.createElement("table");
+    table.border = "1";
+    table.cellPadding = "6";
+
+    table.innerHTML = `
+            <thead>
+            <tr>
+                <th>File</th>
+                <th>Chunk</th>
+                <th>Distance</th>
+                <th>Content</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        `;
+
+        const tbody = table.querySelector("tbody");
+
+        for (const result of results) {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+                <td>${result.originalFilename}</td>
+                <td>${result.chunkIndex}</td>
+                <td>${result.distance.toFixed(4)}</td>
+                <td>
+                    <pre style="white-space: pre-wrap; max-width: 700px;">
+${result.content}
+                    </pre>
+                </td>
+            `;
+
+        tbody.appendChild(row);
+    }
+
+        searchResults.appendChild(table);
+    }
+
 </script>
 </body>
 </html>
