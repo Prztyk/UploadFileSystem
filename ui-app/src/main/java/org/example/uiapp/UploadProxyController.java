@@ -60,13 +60,15 @@ public class UploadProxyController {
     @GetMapping("/search")
     public ResponseEntity<String> search(
             @RequestParam String query,
-            @RequestParam(defaultValue = "5") int limit
+            @RequestParam(defaultValue = "5") int limit,
+            @RequestParam(defaultValue = "0.0") double minSimilarity
     ) {
         String response = restClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/api/search")
                         .queryParam("query", query)
                         .queryParam("limit", limit)
+                        .queryParam("minSimilarity", minSimilarity)
                         .build())
                 .retrieve()
                 .body(String.class);

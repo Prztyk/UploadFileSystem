@@ -23,25 +23,37 @@ public class SemanticSearchService {
         this.pgVectorFormatService = pgVectorFormatService;
     }
 
-    public List<SemanticSearchResultDto> search(String query, int limit) {
+    public List<SemanticSearchResultDto> search(String query, int limit, double minSimilarity) {
         List<Double> queryEmbedding = embeddingGenerationService.generateEmbedding(query);
         String queryVector = pgVectorFormatService.toPgVectorValue(queryEmbedding);
         String modelName = embeddingGenerationService.getModelName();
 
         return jdbcTemplate.query(
                 """
+                WITH ranked_chunks AS (
+                    SELECT
+                        dc.id AS chunk_id,
+                        dc.file_id,
+                        dc.chunk_index,
+                        uf.original_filename,
+                        dc.content,
+                        dce.embedding <=> ?::vector AS distance
+                    FROM document_chunk_embeddings dce
+                    JOIN document_chunks dc ON dc.id = dce.chunk_id
+                    JOIN uploaded_files uf ON uf.id = dc.file_id
+                    WHERE dce.model_name = ?
+                )
                 SELECT
-                    dc.id AS chunk_id,
-                    dc.file_id,
-                    dc.chunk_index,
-                    uf.original_filename,
-                    dc.content,
-                    dce.embedding <=> ?::vector AS distance
-                FROM document_chunk_embeddings dce
-                JOIN document_chunks dc ON dc.id = dce.chunk_id
-                JOIN uploaded_files uf ON uf.id = dc.file_id
-                WHERE dce.model_name = ?
-                ORDER BY dce.embedding <=> ?::vector
+                    chunk_id,
+                    file_id,
+                    chunk_index,
+                    original_filename,
+                    content,
+                    distance,
+                    1 - distance AS similarity_score
+                FROM ranked_chunks
+                WHERE 1 - distance >= ?
+                ORDER BY distance
                 LIMIT ?
                 """,
                 (rs, rowNum) -> new SemanticSearchResultDto(
@@ -50,11 +62,12 @@ public class SemanticSearchService {
                         rs.getInt("chunk_index"),
                         rs.getString("original_filename"),
                         rs.getString("content"),
-                        rs.getDouble("distance")
+                        rs.getDouble("distance"),
+                        rs.getDouble("similarity_score")
                 ),
                 queryVector,
                 modelName,
-                queryVector,
+                minSimilarity,
                 limit
         );
     }

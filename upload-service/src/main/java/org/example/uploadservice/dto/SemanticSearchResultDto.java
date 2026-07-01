@@ -6,6 +6,7 @@ public record SemanticSearchResultDto(
         Integer chunkIndex,
         String originalFilename,
         String content,
-        Double distance
+        Double distance,
+        Double similarityScore
 ) {
 }

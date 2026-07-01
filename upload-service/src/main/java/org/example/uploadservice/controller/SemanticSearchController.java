@@ -20,8 +20,11 @@ public class SemanticSearchController {
     @GetMapping
     public ResponseEntity<List<SemanticSearchResultDto>> search(
             @RequestParam String query,
-            @RequestParam(defaultValue = "5") int limit
+            @RequestParam(defaultValue = "5") int limit,
+            @RequestParam(defaultValue = "0.0") double minSimilarity
     ) {
-        return ResponseEntity.ok(semanticSearchService.search(query, limit));
+        return ResponseEntity.ok(
+                semanticSearchService.search(query, limit, minSimilarity)
+        );
     }
 }

@@ -55,6 +55,15 @@
             max="20"
     >
 
+    <input
+            type="number"
+            id="minSimilarity"
+            value="0"
+            min="-1"
+            max="1"
+            step="0.01"
+    >
+
     <button type="submit">Search</button>
 </form>
 
@@ -131,6 +140,7 @@
     const searchQuery = document.getElementById("searchQuery");
     const searchLimit = document.getElementById("searchLimit");
     const searchResults = document.getElementById("searchResults");
+    const minSimilarity = document.getElementById("minSimilarity");
 
     searchForm.addEventListener("submit", async function (event) {
         event.preventDefault();
@@ -139,7 +149,7 @@
         const limit = searchLimit.value;
 
         const response = await fetch(
-            `/search?query=${encodeURIComponent(query)}&limit=${encodeURIComponent(limit)}`
+            `/search?query=${encodeURIComponent(query)}&limit=${encodeURIComponent(limit)}&minSimilarity=${encodeURIComponent(minSimilarity.value)}`
         );
 
         const results = await response.json();
@@ -164,6 +174,7 @@
             <tr>
                 <th>File</th>
                 <th>Chunk</th>
+                <th>Similarity</th>
                 <th>Distance</th>
                 <th>Content</th>
             </tr>
@@ -179,6 +190,7 @@
         row.innerHTML = `
                 <td>${result.originalFilename}</td>
                 <td>${result.chunkIndex}</td>
+                <td>${result.similarityScore.toFixed(4)}</td>
                 <td>${result.distance.toFixed(4)}</td>
                 <td>
                     <pre style="white-space: pre-wrap; max-width: 700px;">

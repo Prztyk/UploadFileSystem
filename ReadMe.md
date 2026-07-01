@@ -1,12 +1,24 @@
 Browser flow:
 
-   Browser
-   ↓
-   ui-app
-   ↓
-   upload-service
-   ↓
-   PostgreSQL
+    Browser
+    ↓
+    ui-app
+    ↓
+    upload-service
+    ↓
+    PostgreSQL
+
+Semantic search flow:
+
+    Browser
+    ↓ /search
+    ui-app
+    ↓ /api/search
+    upload-service
+    ↓ Ollama embedding
+    PostgreSQL pgvector similarity search
+    ↓
+    semantic results
 
 Backend flow:  
 
@@ -51,6 +63,22 @@ To do:
 E:\Repo\Java\UploadFileSystem\upload-service\src\main\java\org\example\uploadservice\service\DocumentProcessingService.java
 - List of uploaded documents
 - private final Path uploadDir = Path.of("uploads"); in several places
+- semantic search + exact phrase boost
+
+#terms
+
+1. semantic search  
+when looking for `Binding Agreement`
+the embedding model may return chunks about:
+contract
+legal obligation
+terms
+parties
+acceptance
+agreement
+even if the phrase `Binding Agreement` appears somewhere else
+for phrase search you need: `semantic search + exact phrase boost`
+That is closer to how real document search systems work. Pure vector search is rarely enough. For legal, contracts, invoices, procedures, policies, and technical docs, hybrid search is usually much better because exact terms often matter.
 
 # Ollama
 
