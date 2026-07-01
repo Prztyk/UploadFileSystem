@@ -77,20 +77,25 @@ terms
 parties
 acceptance
 agreement
-(commit d28fc0a79641250f5ef25386e0a5f5a09e42035d)
+(commit: d28fc0a79641250f5ef25386e0a5f5a09e42035d)
 but not exact searched phase even if the phrase `Binding Agreement` appeared somewhere in chunks
 i asked myself why there is no result with exact match
 and that way i come into `phrase search`, 
 so my next step was: `semantic search + exact phrase boost`
 That is closer to how real document search systems work. Pure vector search is rarely enough. For legal, contracts, invoices, procedures, policies, and technical docs, hybrid search is usually much better because exact terms often matter.
-(commit f6d736efc46a3a43073250a7475d4627f7ed349f)
+(commit: f6d736efc46a3a43073250a7475d4627f7ed349f)
 next i added full-text-search to have
 `semantic search + PostgreSQL full-text search + exact phrase boost`
 hybrid score =
     semantic score * 0.7
  +  lexical score * 0.25
  +  phrase bonus
+(commit: 592d046cde8036d7f1dd3cc36bf2409ead79aeac)
 
+2. HNSW index
+Use EXPLAIN ANALYZE
+Look for something like  Index Scan using idx_document_chunk_embeddings_embedding_hnsw
+If you only have a small number of rows, PostgreSQL may still choose a sequential scan because it is cheaper. That is normal.
 # Ollama
 
 1. commands

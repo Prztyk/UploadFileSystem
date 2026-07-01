@@ -38,5 +38,24 @@ from semantic_search.public.uploaded_files uf
 left join document_chunks dc on dc.file_id = uf.id 
 where dc.file_id = 14;
 
+-- index exists
 
+SELECT indexname, indexdef
+FROM pg_indexes
+WHERE tablename = 'document_chunk_embeddings';
 
+-- explain analyze
+-- check whether the HNSW index is used
+
+EXPLAIN ANALYZE
+SELECT
+    id,
+    chunk_id,
+    model_name
+FROM document_chunk_embeddings
+ORDER BY embedding <=> (
+    SELECT embedding
+    FROM document_chunk_embeddings
+    LIMIT 1
+)
+LIMIT 5;
