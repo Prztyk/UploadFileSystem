@@ -8,6 +8,7 @@ public record SemanticSearchResultDto(
         String content,
         Double distance,
         Double similarityScore,
+        Double lexicalScore,
         Boolean exactPhraseMatch,
         Double hybridScore
 ) {

@@ -28,8 +28,6 @@ public class SemanticSearchService {
         String queryVector = pgVectorFormatService.toPgVectorValue(queryEmbedding);
         String modelName = embeddingGenerationService.getModelName();
 
-        String phrasePattern = "%" + query.toLowerCase() + "%";
-
         return jdbcTemplate.query(
                 """
                 WITH ranked_chunks AS (
@@ -40,10 +38,11 @@ public class SemanticSearchService {
                         uf.original_filename,
                         dc.content,
                         dce.embedding <=> ?::vector AS distance,
-                        CASE
-                            WHEN lower(dc.content) LIKE ? THEN true
-                            ELSE false
-                        END AS exact_phrase_match
+                        ts_rank_cd(
+                            dc.search_vector,
+                            websearch_to_tsquery('english', ?)
+                        ) AS lexical_score,
+                        dc.search_vector @@ phraseto_tsquery('english', ?) AS exact_phrase_match
                     FROM document_chunk_embeddings dce
                     JOIN document_chunks dc ON dc.id = dce.chunk_id
                     JOIN uploaded_files uf ON uf.id = dc.file_id
@@ -58,11 +57,13 @@ public class SemanticSearchService {
                         content,
                         distance,
                         1 - distance AS similarity_score,
+                        lexical_score,
                         exact_phrase_match,
-                        CASE
-                            WHEN exact_phrase_match THEN (1 - distance) + 0.30
-                            ELSE 1 - distance
-                        END AS hybrid_score
+                        (
+                            ((1 - distance) * 0.70)
+                            + (least(lexical_score, 1.0) * 0.25)
+                            + CASE WHEN exact_phrase_match THEN 0.20 ELSE 0 END
+                        ) AS hybrid_score
                     FROM ranked_chunks
                 )
                 SELECT
@@ -73,10 +74,13 @@ public class SemanticSearchService {
                     content,
                     distance,
                     similarity_score,
+                    lexical_score,
                     exact_phrase_match,
                     hybrid_score
                 FROM scored_chunks
                 WHERE similarity_score >= ?
+                   OR lexical_score > 0
+                   OR exact_phrase_match = true
                 ORDER BY hybrid_score DESC
                 LIMIT ?
                 """,
@@ -88,11 +92,13 @@ public class SemanticSearchService {
                         rs.getString("content"),
                         rs.getDouble("distance"),
                         rs.getDouble("similarity_score"),
+                        rs.getDouble("lexical_score"),
                         rs.getBoolean("exact_phrase_match"),
                         rs.getDouble("hybrid_score")
                 ),
                 queryVector,
-                phrasePattern,
+                query,
+                query,
                 modelName,
                 minSimilarity,
                 limit
