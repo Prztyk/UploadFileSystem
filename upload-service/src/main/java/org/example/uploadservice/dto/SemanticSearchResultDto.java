@@ -7,6 +7,8 @@ public record SemanticSearchResultDto(
         String originalFilename,
         String content,
         Double distance,
-        Double similarityScore
+        Double similarityScore,
+        Boolean exactPhraseMatch,
+        Double hybridScore
 ) {
 }
