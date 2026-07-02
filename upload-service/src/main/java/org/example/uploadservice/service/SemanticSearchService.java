@@ -36,7 +36,9 @@ public class SemanticSearchService {
                         dc.file_id,
                         dc.chunk_index,
                         uf.original_filename,
+                        previous_chunk.content AS previous_content,
                         dc.content,
+                        next_chunk.content AS next_content,
                         dce.embedding <=> ?::vector AS distance,
                         ts_rank_cd(
                             dc.search_vector,
@@ -46,6 +48,15 @@ public class SemanticSearchService {
                     FROM document_chunk_embeddings dce
                     JOIN document_chunks dc ON dc.id = dce.chunk_id
                     JOIN uploaded_files uf ON uf.id = dc.file_id
+    
+                    LEFT JOIN document_chunks previous_chunk
+                        ON previous_chunk.file_id = dc.file_id
+                       AND previous_chunk.chunk_index = dc.chunk_index - 1
+    
+                    LEFT JOIN document_chunks next_chunk
+                        ON next_chunk.file_id = dc.file_id
+                       AND next_chunk.chunk_index = dc.chunk_index + 1
+    
                     WHERE dce.model_name = ?
                 ),
                 scored_chunks AS (
@@ -54,7 +65,9 @@ public class SemanticSearchService {
                         file_id,
                         chunk_index,
                         original_filename,
+                        previous_content,
                         content,
+                        next_content,
                         distance,
                         1 - distance AS similarity_score,
                         lexical_score,
@@ -71,7 +84,9 @@ public class SemanticSearchService {
                     file_id,
                     chunk_index,
                     original_filename,
+                    previous_content,
                     content,
+                    next_content,
                     distance,
                     similarity_score,
                     lexical_score,
@@ -89,7 +104,9 @@ public class SemanticSearchService {
                         rs.getLong("file_id"),
                         rs.getInt("chunk_index"),
                         rs.getString("original_filename"),
+                        rs.getString("previous_content"),
                         rs.getString("content"),
+                        rs.getString("next_content"),
                         rs.getDouble("distance"),
                         rs.getDouble("similarity_score"),
                         rs.getDouble("lexical_score"),

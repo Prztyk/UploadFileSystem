@@ -199,9 +199,9 @@
                 <td>${result.exactPhraseMatch ? "Yes" : "No"}</td>
                 <td>${result.hybridScore.toFixed(4)}</td>
                 <td>
-                    <pre style="white-space: pre-wrap; max-width: 700px;">
-${result.content}
-                    </pre>
+                    ${renderContextBlock("Previous chunk", result.previousContent)}
+                    ${renderContextBlock("Matching chunk", result.content)}
+                    ${renderContextBlock("Next chunk", result.nextContent)}
                 </td>
             `;
 
@@ -209,6 +209,21 @@ ${result.content}
     }
 
         searchResults.appendChild(table);
+    }
+
+    function renderContextBlock(title, content) {
+        if (!content) {
+            return "";
+        }
+
+        return `
+        <div style="margin-bottom: 12px;">
+            <strong>${title}</strong>
+            <pre style="white-space: pre-wrap; max-width: 900px; border: 1px solid #ccc; padding: 8px;">
+${content}
+            </pre>
+        </div>
+    `;
     }
 
 </script>
