@@ -75,4 +75,14 @@ public class UploadProxyController {
 
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/files/{fileId}/logs")
+    public ResponseEntity<String> getLogs(@PathVariable Long fileId) {
+        String response = restClient.get()
+                .uri("/api/files/{fileId}/logs", fileId)
+                .retrieve()
+                .body(String.class);
+
+        return ResponseEntity.ok(response);
+    }
 }

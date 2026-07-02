@@ -2,7 +2,9 @@ package org.example.uploadservice.controller;
 
 import org.example.uploadservice.entity.DocumentChunk;
 import org.example.uploadservice.entity.UploadedFile;
+import org.example.uploadservice.entity.UploadedFileProcessingLog;
 import org.example.uploadservice.repository.DocumentChunkRepository;
+import org.example.uploadservice.repository.UploadedFileProcessingLogRepository;
 import org.example.uploadservice.repository.UploadedFileRepository;
 import org.example.uploadservice.service.FileStorageService;
 import org.springframework.http.ResponseEntity;
@@ -19,15 +21,18 @@ public class FileUploadController {
     private final FileStorageService fileStorageService;
     private final UploadedFileRepository repository;
     private final DocumentChunkRepository chunkRepository;
+    private final UploadedFileProcessingLogRepository logRepository;
 
     public FileUploadController(
             FileStorageService fileStorageService,
             UploadedFileRepository repository,
-            DocumentChunkRepository chunkRepository
+            DocumentChunkRepository chunkRepository,
+            UploadedFileProcessingLogRepository logRepository
     ) {
         this.fileStorageService = fileStorageService;
         this.repository = repository;
         this.chunkRepository = chunkRepository;
+        this.logRepository = logRepository;
     }
 
     @PostMapping("/upload")
@@ -46,5 +51,10 @@ public class FileUploadController {
     public ResponseEntity<List<DocumentChunk>> getChunks(@PathVariable Long fileId) {
         List<DocumentChunk> chunks = chunkRepository.findByFileIdOrderByChunkIndexAsc(fileId);
         return ResponseEntity.ok(chunks);
+    }
+
+    @GetMapping("/{fileId}/logs")
+    public ResponseEntity<List<UploadedFileProcessingLog>> getLogs(@PathVariable Long fileId) {
+        return ResponseEntity.ok(logRepository.findByFileIdOrderByCreatedAtAsc(fileId));
     }
 }

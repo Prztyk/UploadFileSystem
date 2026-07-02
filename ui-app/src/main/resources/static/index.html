@@ -33,8 +33,8 @@
     <tbody id="historyBody"></tbody>
 </table>
 
-<h2>Chunks</h2>
-<div id="chunks"></div>
+<h2>File details</h2>
+<div id="fileDetails"></div>
 
 <h2>Semantic search</h2>
 
@@ -73,7 +73,6 @@
     const form = document.getElementById("uploadForm");
     const result = document.getElementById("result");
     const historyBody = document.getElementById("historyBody");
-    const chunksDiv = document.getElementById("chunks");
 
     form.addEventListener("submit", async function (event) {
         event.preventDefault();
@@ -108,29 +107,11 @@
                 <td>${file.status}</td>
                 <td>${file.createdAt}</td>
                 <td>
-                    <button onclick="loadChunks(${file.id})">View chunks</button>
+                    <button onclick="loadFileDetails(${file.id})">Details</button>
                 </td>
             `;
 
             historyBody.appendChild(row);
-        }
-    }
-
-    async function loadChunks(fileId) {
-        const response = await fetch(`/files/${fileId}/chunks`);
-        const chunks = await response.json();
-
-        chunksDiv.innerHTML = "";
-
-        for (const chunk of chunks) {
-            const block = document.createElement("pre");
-            block.style.border = "1px solid #ccc";
-            block.style.padding = "10px";
-            block.style.whiteSpace = "pre-wrap";
-
-            block.textContent = `Chunk ${chunk.chunkIndex}\n\n${chunk.content}`;
-
-            chunksDiv.appendChild(block);
         }
     }
 
@@ -224,6 +205,111 @@ ${content}
             </pre>
         </div>
     `;
+    }
+
+    const fileDetails = document.getElementById("fileDetails");
+
+    async function loadFileDetails(fileId) {
+        const chunksResponse = await fetch(`/files/${fileId}/chunks`);
+        const logsResponse = await fetch(`/files/${fileId}/logs`);
+
+        const chunks = await chunksResponse.json();
+        const logs = await logsResponse.json();
+
+        renderFileDetails(fileId, chunks, logs);
+    }
+
+    function renderFileDetails(fileId, chunks, logs) {
+        fileDetails.innerHTML = "";
+
+        const title = document.createElement("h3");
+        title.textContent = `File ID: ${fileId}`;
+        fileDetails.appendChild(title);
+
+        fileDetails.appendChild(renderLogsTable(logs));
+        fileDetails.appendChild(renderChunksSection(chunks));
+    }
+
+    function renderLogsTable(logs) {
+        const container = document.createElement("div");
+
+        const title = document.createElement("h3");
+        title.textContent = "Processing logs";
+        container.appendChild(title);
+
+        if (logs.length === 0) {
+            const empty = document.createElement("p");
+            empty.textContent = "No logs found.";
+            container.appendChild(empty);
+            return container;
+        }
+
+        const table = document.createElement("table");
+        table.border = "1";
+        table.cellPadding = "6";
+
+        table.innerHTML = `
+        <thead>
+        <tr>
+            <th>Status</th>
+            <th>Message</th>
+            <th>Created at</th>
+            <th>Stack trace</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    `;
+
+        const tbody = table.querySelector("tbody");
+
+        for (const log of logs) {
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+            <td>${log.status}</td>
+            <td>${log.message ?? ""}</td>
+            <td>${log.createdAt}</td>
+            <td>
+                <pre style="white-space: pre-wrap; max-width: 600px;">
+${log.stackTrace ?? ""}
+                </pre>
+            </td>
+        `;
+
+            tbody.appendChild(row);
+        }
+
+        container.appendChild(table);
+        return container;
+    }
+
+    function renderChunksSection(chunks) {
+        const container = document.createElement("div");
+
+        const title = document.createElement("h3");
+        title.textContent = "Chunks";
+        container.appendChild(title);
+
+        if (chunks.length === 0) {
+            const empty = document.createElement("p");
+            empty.textContent = "No chunks found.";
+            container.appendChild(empty);
+            return container;
+        }
+
+        for (const chunk of chunks) {
+            const block = document.createElement("pre");
+            block.style.border = "1px solid #ccc";
+            block.style.padding = "10px";
+            block.style.whiteSpace = "pre-wrap";
+            block.style.maxWidth = "900px";
+
+            block.textContent = `Chunk ${chunk.chunkIndex}\n\n${chunk.content}`;
+
+            container.appendChild(block);
+        }
+
+        return container;
     }
 
 </script>
