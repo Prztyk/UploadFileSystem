@@ -95,4 +95,24 @@ public class UploadProxyController {
 
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/files/{fileId}/reprocess")
+    public ResponseEntity<Void> reprocessFile(@PathVariable Long fileId) {
+        restClient.post()
+                .uri("/api/files/{fileId}/reprocess", fileId)
+                .retrieve()
+                .toBodilessEntity();
+
+        return ResponseEntity.accepted().build();
+    }
+
+    @DeleteMapping("/files/{fileId}")
+    public ResponseEntity<Void> deleteFile(@PathVariable Long fileId) {
+        restClient.delete()
+                .uri("/api/files/{fileId}", fileId)
+                .retrieve()
+                .toBodilessEntity();
+
+        return ResponseEntity.noContent().build();
+    }
 }

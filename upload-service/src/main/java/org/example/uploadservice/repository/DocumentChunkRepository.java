@@ -8,4 +8,5 @@ import java.util.List;
 public interface DocumentChunkRepository extends JpaRepository<DocumentChunk, Long> {
 
     List<DocumentChunk> findByFileIdOrderByChunkIndexAsc(Long fileId);
+    void deleteByFileId(Long fileId);
 }

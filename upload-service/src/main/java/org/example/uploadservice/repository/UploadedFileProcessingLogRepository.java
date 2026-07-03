@@ -8,4 +8,5 @@ import java.util.List;
 public interface UploadedFileProcessingLogRepository extends JpaRepository<UploadedFileProcessingLog, Long> {
 
     List<UploadedFileProcessingLog> findByFileIdOrderByCreatedAtAsc(Long fileId);
+    void deleteByFileId(Long fileId);
 }

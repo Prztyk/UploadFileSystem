@@ -53,10 +53,14 @@ Backend flow:
 # frontend endpoints
 
 GET http://localhost:8080/files/{fileId}/embedding-status
+POST   http://localhost:8080/files/{fileId}/reprocess
+DELETE http://localhost:8080/files/{fileId}
 
 # backend endpoints
 
 GET http://localhost:8081/api/files/{fileId}/embedding-status
+POST   http://localhost:8081/api/files/{fileId}/reprocess
+DELETE http://localhost:8081/api/files/{fileId}
 
 # changes
 
