@@ -50,6 +50,14 @@ Backend flow:
     ↓
     return best matching chunks
 
+# frontend endpoints
+
+GET http://localhost:8080/files/{fileId}/embedding-status
+
+# backend endpoints
+
+GET http://localhost:8081/api/files/{fileId}/embedding-status
+
 # changes
 
 1. expose history & chunks through API (commit: 104e5e76)  
@@ -65,7 +73,7 @@ E:\Repo\Java\UploadFileSystem\upload-service\src\main\java\org\example\uploadser
 - private final Path uploadDir = Path.of("uploads"); in several places
 - semantic search + exact phrase boost
 
-#terms
+# terms
 
 1. the evolution of search
 started with semantic search
@@ -147,3 +155,4 @@ If you only have a small number of rows, PostgreSQL may still choose a sequentia
 Used JdbcTemplate instead of JPA here, because VECTOR(1536) is a PostgreSQL/pgvector-specific type.
 2. First embedding model nomic-embed-text  
 It uses vector dimension 768, so i need to modify database -> V006__document_chunk_embeddings__change_embedding_dimension_to_768.sql
+

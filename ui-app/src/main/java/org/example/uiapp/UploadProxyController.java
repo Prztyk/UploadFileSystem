@@ -85,4 +85,14 @@ public class UploadProxyController {
 
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/files/{fileId}/embedding-status")
+    public ResponseEntity<String> getEmbeddingStatus(@PathVariable Long fileId) {
+        String response = restClient.get()
+                .uri("/api/files/{fileId}/embedding-status", fileId)
+                .retrieve()
+                .body(String.class);
+
+        return ResponseEntity.ok(response);
+    }
 }

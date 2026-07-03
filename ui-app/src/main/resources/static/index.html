@@ -212,20 +212,23 @@ ${content}
     async function loadFileDetails(fileId) {
         const chunksResponse = await fetch(`/files/${fileId}/chunks`);
         const logsResponse = await fetch(`/files/${fileId}/logs`);
+        const embeddingStatusResponse = await fetch(`/files/${fileId}/embedding-status`);
 
         const chunks = await chunksResponse.json();
         const logs = await logsResponse.json();
+        const embeddingStatus = await embeddingStatusResponse.json();
 
-        renderFileDetails(fileId, chunks, logs);
+        renderFileDetails(fileId, chunks, logs, embeddingStatus);
     }
 
-    function renderFileDetails(fileId, chunks, logs) {
+    function renderFileDetails(fileId, chunks, logs, embeddingStatus) {
         fileDetails.innerHTML = "";
 
         const title = document.createElement("h3");
         title.textContent = `File ID: ${fileId}`;
         fileDetails.appendChild(title);
 
+        fileDetails.appendChild(renderEmbeddingStatus(embeddingStatus));
         fileDetails.appendChild(renderLogsTable(logs));
         fileDetails.appendChild(renderChunksSection(chunks));
     }
@@ -309,6 +312,46 @@ ${log.stackTrace ?? ""}
             container.appendChild(block);
         }
 
+        return container;
+    }
+
+    function renderEmbeddingStatus(status) {
+        const container = document.createElement("div");
+
+        const title = document.createElement("h3");
+        title.textContent = "Embedding status";
+        container.appendChild(title);
+
+        const table = document.createElement("table");
+        table.border = "1";
+        table.cellPadding = "6";
+
+        table.innerHTML = `
+        <tbody>
+        <tr>
+            <th>Model</th>
+            <td>${status.modelName}</td>
+        </tr>
+        <tr>
+            <th>Chunks</th>
+            <td>${status.chunkCount}</td>
+        </tr>
+        <tr>
+            <th>Embeddings</th>
+            <td>${status.embeddingCount}</td>
+        </tr>
+        <tr>
+            <th>Missing embeddings</th>
+            <td>${status.missingEmbeddingCount}</td>
+        </tr>
+        <tr>
+            <th>Fully embedded</th>
+            <td>${status.fullyEmbedded ? "Yes" : "No"}</td>
+        </tr>
+        </tbody>
+    `;
+
+        container.appendChild(table);
         return container;
     }
 

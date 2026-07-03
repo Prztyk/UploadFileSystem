@@ -1,11 +1,13 @@
 package org.example.uploadservice.controller;
 
+import org.example.uploadservice.dto.EmbeddingStatusDto;
 import org.example.uploadservice.entity.DocumentChunk;
 import org.example.uploadservice.entity.UploadedFile;
 import org.example.uploadservice.entity.UploadedFileProcessingLog;
 import org.example.uploadservice.repository.DocumentChunkRepository;
 import org.example.uploadservice.repository.UploadedFileProcessingLogRepository;
 import org.example.uploadservice.repository.UploadedFileRepository;
+import org.example.uploadservice.service.EmbeddingStatusService;
 import org.example.uploadservice.service.FileStorageService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,17 +24,20 @@ public class FileUploadController {
     private final UploadedFileRepository repository;
     private final DocumentChunkRepository chunkRepository;
     private final UploadedFileProcessingLogRepository logRepository;
+    private final EmbeddingStatusService embeddingStatusService;
 
     public FileUploadController(
             FileStorageService fileStorageService,
             UploadedFileRepository repository,
             DocumentChunkRepository chunkRepository,
-            UploadedFileProcessingLogRepository logRepository
+            UploadedFileProcessingLogRepository logRepository,
+            EmbeddingStatusService embeddingStatusService
     ) {
         this.fileStorageService = fileStorageService;
         this.repository = repository;
         this.chunkRepository = chunkRepository;
         this.logRepository = logRepository;
+        this.embeddingStatusService = embeddingStatusService;
     }
 
     @PostMapping("/upload")
@@ -56,5 +61,10 @@ public class FileUploadController {
     @GetMapping("/{fileId}/logs")
     public ResponseEntity<List<UploadedFileProcessingLog>> getLogs(@PathVariable Long fileId) {
         return ResponseEntity.ok(logRepository.findByFileIdOrderByCreatedAtAsc(fileId));
+    }
+
+    @GetMapping("/{fileId}/embedding-status")
+    public ResponseEntity<EmbeddingStatusDto> getEmbeddingStatus(@PathVariable Long fileId) {
+        return ResponseEntity.ok(embeddingStatusService.getEmbeddingStatus(fileId));
     }
 }
