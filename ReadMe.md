@@ -67,12 +67,14 @@ main.js         application startup
 GET http://localhost:8080/files/{fileId}/embedding-status
 POST   http://localhost:8080/files/{fileId}/reprocess
 DELETE http://localhost:8080/files/{fileId}
+GET http://localhost:8080/files/{fileId}/details
 
 # backend endpoints
 
 GET http://localhost:8081/api/files/{fileId}/embedding-status
 POST   http://localhost:8081/api/files/{fileId}/reprocess
 DELETE http://localhost:8081/api/files/{fileId}
+GET http://localhost:8081/api/files/{fileId}/details
 
 # changes
 

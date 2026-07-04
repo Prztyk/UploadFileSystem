@@ -24,36 +24,6 @@ async function fetchUploadHistory() {
     return response.json();
 }
 
-async function fetchFileChunks(fileId) {
-    const response = await fetch(`/files/${fileId}/chunks`);
-
-    if (!response.ok) {
-        throw new Error("Failed to load chunks");
-    }
-
-    return response.json();
-}
-
-async function fetchFileLogs(fileId) {
-    const response = await fetch(`/files/${fileId}/logs`);
-
-    if (!response.ok) {
-        throw new Error("Failed to load processing logs");
-    }
-
-    return response.json();
-}
-
-async function fetchEmbeddingStatus(fileId) {
-    const response = await fetch(`/files/${fileId}/embedding-status`);
-
-    if (!response.ok) {
-        throw new Error("Failed to load embedding status");
-    }
-
-    return response.json();
-}
-
 async function reprocessFile(fileId) {
     const response = await fetch(`/files/${fileId}/reprocess`, {
         method: "POST"
@@ -81,6 +51,28 @@ async function searchDocuments(query, limit, minSimilarity) {
 
     if (!response.ok) {
         throw new Error("Search failed");
+    }
+
+    return response.json();
+}
+
+async function fetchFileDetails(fileId) {
+    const response = await fetch(`/files/${fileId}/details`);
+
+    if (!response.ok) {
+        throw new Error("Failed to load file details");
+    }
+
+    return response.json();
+}
+
+async function fetchFileChunks(fileId, page, size) {
+    const response = await fetch(
+        `/files/${fileId}/chunks?page=${encodeURIComponent(page)}&size=${encodeURIComponent(size)}`
+    );
+
+    if (!response.ok) {
+        throw new Error("Failed to load chunks");
     }
 
     return response.json();

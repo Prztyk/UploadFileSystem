@@ -1,25 +1,167 @@
 const fileDetails = document.getElementById("fileDetails");
 
+let currentDetailsFileId = null;
+let currentChunksPage = 0;
+const chunksPageSize = 10;
+
 async function openFileDetails(fileId) {
     showSection("detailsSection");
 
-    const chunks = await fetchFileChunks(fileId);
-    const logs = await fetchFileLogs(fileId);
-    const embeddingStatus = await fetchEmbeddingStatus(fileId);
+    currentDetailsFileId = fileId;
+    currentChunksPage = 0;
 
-    renderFileDetails(fileId, chunks, logs, embeddingStatus);
+    fileDetails.innerHTML = "<p>Loading file details...</p>";
+
+    const details = await fetchFileDetails(fileId);
+
+    renderFileDetails(details);
 }
 
-function renderFileDetails(fileId, chunks, logs, embeddingStatus) {
+function renderFileDetails(details) {
     fileDetails.innerHTML = "";
 
     const title = document.createElement("h3");
-    title.textContent = `File ID: ${fileId}`;
+    title.textContent = `${details.file.originalFilename} — File ID: ${details.file.id}`;
     fileDetails.appendChild(title);
 
-    fileDetails.appendChild(renderEmbeddingStatus(embeddingStatus));
-    fileDetails.appendChild(renderLogsTable(logs));
-    fileDetails.appendChild(renderChunksSection(chunks));
+    fileDetails.appendChild(renderFileSummary(details.file));
+    fileDetails.appendChild(renderEmbeddingStatus(details.embeddingStatus));
+    fileDetails.appendChild(renderLogsTable(details.logs));
+    fileDetails.appendChild(renderChunksPlaceholder(details.file.id));
+}
+
+function renderChunksPlaceholder(fileId) {
+    const container = document.createElement("div");
+    container.id = "chunksContainer";
+
+    const title = document.createElement("h3");
+    title.textContent = "Chunks";
+    container.appendChild(title);
+
+    const button = document.createElement("button");
+    button.textContent = "Load chunks";
+    button.addEventListener("click", function () {
+        loadChunksPage(fileId, 0);
+    });
+
+    container.appendChild(button);
+
+    return container;
+}
+
+async function loadChunksPage(fileId, page) {
+    const chunksContainer = document.getElementById("chunksContainer");
+
+    chunksContainer.innerHTML = "<h3>Chunks</h3><p>Loading chunks...</p>";
+
+    const chunkPage = await fetchFileChunks(fileId, page, chunksPageSize);
+
+    currentChunksPage = chunkPage.page;
+
+    renderChunksPage(chunkPage);
+}
+
+function renderChunksPage(chunkPage) {
+    const chunksContainer = document.getElementById("chunksContainer");
+
+    chunksContainer.innerHTML = "";
+
+    const title = document.createElement("h3");
+    title.textContent = "Chunks";
+    chunksContainer.appendChild(title);
+
+    const pageInfo = document.createElement("p");
+    pageInfo.textContent =
+        `Page ${chunkPage.page + 1} of ${chunkPage.totalPages} ` +
+        `(${chunkPage.totalElements} chunks total)`;
+    chunksContainer.appendChild(pageInfo);
+
+    const controlsTop = renderChunkPaginationControls(chunkPage);
+    chunksContainer.appendChild(controlsTop);
+
+    if (chunkPage.chunks.length === 0) {
+        const empty = document.createElement("p");
+        empty.textContent = "No chunks found.";
+        chunksContainer.appendChild(empty);
+        return;
+    }
+
+    for (const chunk of chunkPage.chunks) {
+        const block = document.createElement("pre");
+        block.textContent = `Chunk ${chunk.chunkIndex}\n\n${chunk.content}`;
+        chunksContainer.appendChild(block);
+    }
+
+    const controlsBottom = renderChunkPaginationControls(chunkPage);
+    chunksContainer.appendChild(controlsBottom);
+}
+
+function renderChunkPaginationControls(chunkPage) {
+    const container = document.createElement("div");
+    container.className = "action-buttons";
+
+    const previousButton = document.createElement("button");
+    previousButton.textContent = "Previous";
+    previousButton.disabled = !chunkPage.hasPrevious;
+    previousButton.addEventListener("click", function () {
+        loadChunksPage(chunkPage.fileId, chunkPage.page - 1);
+    });
+
+    const nextButton = document.createElement("button");
+    nextButton.textContent = "Next";
+    nextButton.disabled = !chunkPage.hasNext;
+    nextButton.addEventListener("click", function () {
+        loadChunksPage(chunkPage.fileId, chunkPage.page + 1);
+    });
+
+    container.appendChild(previousButton);
+    container.appendChild(nextButton);
+
+    return container;
+}
+
+function renderFileSummary(file) {
+    const container = document.createElement("div");
+
+    const title = document.createElement("h3");
+    title.textContent = "File summary";
+    container.appendChild(title);
+
+    const table = document.createElement("table");
+    table.border = "1";
+    table.cellPadding = "6";
+
+    table.innerHTML = `
+        <tbody>
+        <tr>
+            <th>Status</th>
+            <td>${file.status}</td>
+        </tr>
+        <tr>
+            <th>Original filename</th>
+            <td>${file.originalFilename}</td>
+        </tr>
+        <tr>
+            <th>Stored filename</th>
+            <td>${file.storedFilename}</td>
+        </tr>
+        <tr>
+            <th>Content type</th>
+            <td>${file.contentType}</td>
+        </tr>
+        <tr>
+            <th>Size</th>
+            <td>${file.size}</td>
+        </tr>
+        <tr>
+            <th>Created at</th>
+            <td>${file.createdAt}</td>
+        </tr>
+        </tbody>
+    `;
+
+    container.appendChild(table);
+    return container;
 }
 
 function renderEmbeddingStatus(status) {

@@ -48,9 +48,17 @@ public class UploadProxyController {
     }
 
     @GetMapping("/files/{fileId}/chunks")
-    public ResponseEntity<String> getChunks(@PathVariable Long fileId) {
+    public ResponseEntity<String> getChunks(
+            @PathVariable Long fileId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
         String response = restClient.get()
-                .uri("/api/files/{fileId}/chunks", fileId)
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/files/{fileId}/chunks")
+                        .queryParam("page", page)
+                        .queryParam("size", size)
+                        .build(fileId))
                 .retrieve()
                 .body(String.class);
 
@@ -114,5 +122,15 @@ public class UploadProxyController {
                 .toBodilessEntity();
 
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/files/{fileId}/details")
+    public ResponseEntity<String> getFileDetails(@PathVariable Long fileId) {
+        String response = restClient.get()
+                .uri("/api/files/{fileId}/details", fileId)
+                .retrieve()
+                .body(String.class);
+
+        return ResponseEntity.ok(response);
     }
 }

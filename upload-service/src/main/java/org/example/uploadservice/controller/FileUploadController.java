@@ -1,15 +1,15 @@
 package org.example.uploadservice.controller;
 
+import org.example.uploadservice.dto.ChunkPageDto;
 import org.example.uploadservice.dto.EmbeddingStatusDto;
+import org.example.uploadservice.dto.FileDetailsDto;
 import org.example.uploadservice.entity.DocumentChunk;
 import org.example.uploadservice.entity.UploadedFile;
 import org.example.uploadservice.entity.UploadedFileProcessingLog;
 import org.example.uploadservice.repository.DocumentChunkRepository;
 import org.example.uploadservice.repository.UploadedFileProcessingLogRepository;
 import org.example.uploadservice.repository.UploadedFileRepository;
-import org.example.uploadservice.service.EmbeddingStatusService;
-import org.example.uploadservice.service.FileStorageService;
-import org.example.uploadservice.service.UploadedFileMaintenanceService;
+import org.example.uploadservice.service.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,6 +27,8 @@ public class FileUploadController {
     private final UploadedFileProcessingLogRepository logRepository;
     private final EmbeddingStatusService embeddingStatusService;
     private final UploadedFileMaintenanceService uploadedFileMaintenanceService;
+    private final ChunkQueryService chunkQueryService;
+    private final FileDetailsService fileDetailsService;
 
     public FileUploadController(
             FileStorageService fileStorageService,
@@ -34,7 +36,9 @@ public class FileUploadController {
             DocumentChunkRepository chunkRepository,
             UploadedFileProcessingLogRepository logRepository,
             EmbeddingStatusService embeddingStatusService,
-            UploadedFileMaintenanceService uploadedFileMaintenanceService
+            UploadedFileMaintenanceService uploadedFileMaintenanceService,
+            ChunkQueryService chunkQueryService,
+            FileDetailsService fileDetailsService
     ) {
         this.fileStorageService = fileStorageService;
         this.repository = repository;
@@ -42,6 +46,8 @@ public class FileUploadController {
         this.logRepository = logRepository;
         this.embeddingStatusService = embeddingStatusService;
         this.uploadedFileMaintenanceService = uploadedFileMaintenanceService;
+        this.chunkQueryService = chunkQueryService;
+        this.fileDetailsService = fileDetailsService;
     }
 
     @PostMapping("/upload")
@@ -57,9 +63,12 @@ public class FileUploadController {
     }
 
     @GetMapping("/{fileId}/chunks")
-    public ResponseEntity<List<DocumentChunk>> getChunks(@PathVariable Long fileId) {
-        List<DocumentChunk> chunks = chunkRepository.findByFileIdOrderByChunkIndexAsc(fileId);
-        return ResponseEntity.ok(chunks);
+    public ResponseEntity<ChunkPageDto> getChunks(
+            @PathVariable Long fileId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(chunkQueryService.getChunks(fileId, page, size));
     }
 
     @GetMapping("/{fileId}/logs")
@@ -82,5 +91,10 @@ public class FileUploadController {
     public ResponseEntity<Void> deleteFile(@PathVariable Long fileId) {
         uploadedFileMaintenanceService.deleteFile(fileId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{fileId}/details")
+    public ResponseEntity<FileDetailsDto> getFileDetails(@PathVariable Long fileId) {
+        return ResponseEntity.ok(fileDetailsService.getFileDetails(fileId));
     }
 }
