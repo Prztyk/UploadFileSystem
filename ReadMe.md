@@ -50,6 +50,18 @@ Backend flow:
     ↓
     return best matching chunks
 
+# frontend
+
+index.html      layout only
+api.js          HTTP calls
+navigation.js   menu behavior
+upload.js       upload feature
+history.js      history table + actions
+details.js      file details rendering
+search.js       semantic search
+main.js         application startup
+
+
 # frontend endpoints
 
 GET http://localhost:8080/files/{fileId}/embedding-status

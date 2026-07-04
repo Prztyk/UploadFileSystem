@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Semantic Search Upload</title>
+</head>
+<body>
+<h1>Upload file</h1>
+
+<form id="uploadForm">
+    <input type="file" name="file" required>
+    <button type="submit">Upload</button>
+</form>
+
+<p id="result"></p>
+
+<h2>Upload history</h2>
+<button onclick="loadHistory()">Refresh history</button>
+
+<table border="1" cellpadding="6">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Original filename</th>
+        <th>Stored filename</th>
+        <th>Content type</th>
+        <th>Size</th>
+        <th>Status</th>
+        <th>Created at</th>
+        <th>Chunks</th>
+    </tr>
+    </thead>
+    <tbody id="historyBody"></tbody>
+</table>
+
+<h2>File details</h2>
+<div id="fileDetails"></div>
+
+<h2>Semantic search</h2>
+
+<form id="searchForm">
+    <input
+            type="text"
+            id="searchQuery"
+            placeholder="Search in uploaded documents..."
+            required
+            style="width: 400px;"
+    >
+
+    <input
+            type="number"
+            id="searchLimit"
+            value="5"
+            min="1"
+            max="20"
+    >
+
+    <input
+            type="number"
+            id="minSimilarity"
+            value="0"
+            min="-1"
+            max="1"
+            step="0.01"
+    >
+
+    <button type="submit">Search</button>
+</form>
+
+<div id="searchResults"></div>
+
+<script>
+    const form = document.getElementById("uploadForm");
+    const result = document.getElementById("result");
+    const historyBody = document.getElementById("historyBody");
+
+    form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const formData = new FormData(form);
+
+        const response = await fetch("/upload", {
+            method: "POST",
+            body: formData
+        });
+
+        result.textContent = await response.text();
+
+        await loadHistory();
+    });
+
+    async function loadHistory() {
+        const response = await fetch("/files/history");
+        const files = await response.json();
+
+        historyBody.innerHTML = "";
+
+        for (const file of files) {
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td>${file.id}</td>
+                <td>${file.originalFilename}</td>
+                <td>${file.storedFilename}</td>
+                <td>${file.contentType}</td>
+                <td>${file.size}</td>
+                <td>${file.status}</td>
+                <td>${file.createdAt}</td>
+                <td>
+                    <button onclick="loadFileDetails(${file.id})">Details</button>
+                </td>
+            `;
+
+            historyBody.appendChild(row);
+        }
+    }
+
+    loadHistory();
+
+    const searchForm = document.getElementById("searchForm");
+    const searchQuery = document.getElementById("searchQuery");
+    const searchLimit = document.getElementById("searchLimit");
+    const searchResults = document.getElementById("searchResults");
+    const minSimilarity = document.getElementById("minSimilarity");
+
+    searchForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const query = searchQuery.value;
+        const limit = searchLimit.value;
+
+        const response = await fetch(
+            `/search?query=${encodeURIComponent(query)}&limit=${encodeURIComponent(limit)}&minSimilarity=${encodeURIComponent(minSimilarity.value)}`
+        );
+
+        const results = await response.json();
+
+        renderSearchResults(results);
+    });
+
+    function renderSearchResults(results) {
+        searchResults.innerHTML = "";
+
+        if (results.length === 0) {
+        searchResults.textContent = "No results found.";
+        return;
+    }
+
+    const table = document.createElement("table");
+    table.border = "1";
+    table.cellPadding = "6";
+
+    table.innerHTML = `
+            <thead>
+            <tr>
+                <th>File</th>
+                <th>Chunk</th>
+                <th>Similarity</th>
+                <th>Distance</th>
+                <th>Lexical score</th>
+                <th>Exact phrase</th>
+                <th>Hybrid score</th>
+                <th>Content</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        `;
+
+        const tbody = table.querySelector("tbody");
+
+        for (const result of results) {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+                <td>${result.originalFilename}</td>
+                <td>${result.chunkIndex}</td>
+                <td>${result.similarityScore.toFixed(4)}</td>
+                <td>${result.distance.toFixed(4)}</td>
+                <td>${result.lexicalScore.toFixed(4)}</td>
+                <td>${result.exactPhraseMatch ? "Yes" : "No"}</td>
+                <td>${result.hybridScore.toFixed(4)}</td>
+                <td>
+                    ${renderContextBlock("Previous chunk", result.previousContent)}
+                    ${renderContextBlock("Matching chunk", result.content)}
+                    ${renderContextBlock("Next chunk", result.nextContent)}
+                </td>
+            `;
+
+        tbody.appendChild(row);
+    }
+
+        searchResults.appendChild(table);
+    }
+
+    function renderContextBlock(title, content) {
+        if (!content) {
+            return "";
+        }
+
+        return `
+        <div style="margin-bottom: 12px;">
+            <strong>${title}</strong>
+            <pre style="white-space: pre-wrap; max-width: 900px; border: 1px solid #ccc; padding: 8px;">
+${content}
+            </pre>
+        </div>
+    `;
+    }
+
+    const fileDetails = document.getElementById("fileDetails");
+
+    async function loadFileDetails(fileId) {
+        const chunksResponse = await fetch(`/files/${fileId}/chunks`);
+        const logsResponse = await fetch(`/files/${fileId}/logs`);
+        const embeddingStatusResponse = await fetch(`/files/${fileId}/embedding-status`);
+
+        const chunks = await chunksResponse.json();
+        const logs = await logsResponse.json();
+        const embeddingStatus = await embeddingStatusResponse.json();
+
+        renderFileDetails(fileId, chunks, logs, embeddingStatus);
+    }
+
+    function renderFileDetails(fileId, chunks, logs, embeddingStatus) {
+        fileDetails.innerHTML = "";
+
+        const title = document.createElement("h3");
+        title.textContent = `File ID: ${fileId}`;
+        fileDetails.appendChild(title);
+
+        fileDetails.appendChild(renderEmbeddingStatus(embeddingStatus));
+        fileDetails.appendChild(renderLogsTable(logs));
+        fileDetails.appendChild(renderChunksSection(chunks));
+    }
+
+    function renderLogsTable(logs) {
+        const container = document.createElement("div");
+
+        const title = document.createElement("h3");
+        title.textContent = "Processing logs";
+        container.appendChild(title);
+
+        if (logs.length === 0) {
+            const empty = document.createElement("p");
+            empty.textContent = "No logs found.";
+            container.appendChild(empty);
+            return container;
+        }
+
+        const table = document.createElement("table");
+        table.border = "1";
+        table.cellPadding = "6";
+
+        table.innerHTML = `
+        <thead>
+        <tr>
+            <th>Status</th>
+            <th>Message</th>
+            <th>Created at</th>
+            <th>Stack trace</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    `;
+
+        const tbody = table.querySelector("tbody");
+
+        for (const log of logs) {
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+            <td>${log.status}</td>
+            <td>${log.message ?? ""}</td>
+            <td>${log.createdAt}</td>
+            <td>
+                <pre style="white-space: pre-wrap; max-width: 600px;">
+${log.stackTrace ?? ""}
+                </pre>
+            </td>
+        `;
+
+            tbody.appendChild(row);
+        }
+
+        container.appendChild(table);
+        return container;
+    }
+
+    function renderChunksSection(chunks) {
+        const container = document.createElement("div");
+
+        const title = document.createElement("h3");
+        title.textContent = "Chunks";
+        container.appendChild(title);
+
+        if (chunks.length === 0) {
+            const empty = document.createElement("p");
+            empty.textContent = "No chunks found.";
+            container.appendChild(empty);
+            return container;
+        }
+
+        for (const chunk of chunks) {
+            const block = document.createElement("pre");
+            block.style.border = "1px solid #ccc";
+            block.style.padding = "10px";
+            block.style.whiteSpace = "pre-wrap";
+            block.style.maxWidth = "900px";
+
+            block.textContent = `Chunk ${chunk.chunkIndex}\n\n${chunk.content}`;
+
+            container.appendChild(block);
+        }
+
+        return container;
+    }
+
+    function renderEmbeddingStatus(status) {
+        const container = document.createElement("div");
+
+        const title = document.createElement("h3");
+        title.textContent = "Embedding status";
+        container.appendChild(title);
+
+        const table = document.createElement("table");
+        table.border = "1";
+        table.cellPadding = "6";
+
+        table.innerHTML = `
+        <tbody>
+        <tr>
+            <th>Model</th>
+            <td>${status.modelName}</td>
+        </tr>
+        <tr>
+            <th>Chunks</th>
+            <td>${status.chunkCount}</td>
+        </tr>
+        <tr>
+            <th>Embeddings</th>
+            <td>${status.embeddingCount}</td>
+        </tr>
+        <tr>
+            <th>Missing embeddings</th>
+            <td>${status.missingEmbeddingCount}</td>
+        </tr>
+        <tr>
+            <th>Fully embedded</th>
+            <td>${status.fullyEmbedded ? "Yes" : "No"}</td>
+        </tr>
+        </tbody>
+    `;
+
+        container.appendChild(table);
+        return container;
+    }
+
+</script>
+</body>
+</html>
