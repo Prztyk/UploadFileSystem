@@ -50,3 +50,8 @@ pre {
     display: flex;
     gap: 6px;
 }
+
+.error-message {
+    color: #b00020;
+    font-weight: bold;
+}

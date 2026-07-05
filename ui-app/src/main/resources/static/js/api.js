@@ -18,7 +18,7 @@ async function fetchUploadHistory() {
     const response = await fetch("/files/history");
 
     if (!response.ok) {
-        throw new Error("Failed to load upload history");
+        throw new Error(await parseErrorResponse(response));
     }
 
     return response.json();
@@ -30,7 +30,7 @@ async function reprocessFile(fileId) {
     });
 
     if (!response.ok) {
-        throw new Error("Failed to reprocess file");
+        throw new Error(await parseErrorResponse(response));
     }
 }
 
@@ -40,7 +40,7 @@ async function deleteFile(fileId) {
     });
 
     if (!response.ok) {
-        throw new Error("Failed to delete file");
+        throw new Error(await parseErrorResponse(response));
     }
 }
 
@@ -50,7 +50,7 @@ async function searchDocuments(query, limit, minSimilarity) {
     );
 
     if (!response.ok) {
-        throw new Error("Search failed");
+        throw new Error(await parseErrorResponse(response));
     }
 
     return response.json();
@@ -60,7 +60,7 @@ async function fetchFileDetails(fileId) {
     const response = await fetch(`/files/${fileId}/details`);
 
     if (!response.ok) {
-        throw new Error("Failed to load file details");
+        throw new Error(await parseErrorResponse(response));
     }
 
     return response.json();
@@ -72,8 +72,17 @@ async function fetchFileChunks(fileId, page, size) {
     );
 
     if (!response.ok) {
-        throw new Error("Failed to load chunks");
+        throw new Error(await parseErrorResponse(response));
     }
 
     return response.json();
+}
+
+async function parseErrorResponse(response) {
+    try {
+        const errorBody = await response.json();
+        return errorBody.message ?? "Request failed";
+    } catch (error) {
+        return "Request failed";
+    }
 }

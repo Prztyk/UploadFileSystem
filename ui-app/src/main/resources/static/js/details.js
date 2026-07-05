@@ -12,9 +12,12 @@ async function openFileDetails(fileId) {
 
     fileDetails.innerHTML = "<p>Loading file details...</p>";
 
-    const details = await fetchFileDetails(fileId);
-
-    renderFileDetails(details);
+    try {
+        const details = await fetchFileDetails(fileId);
+        renderFileDetails(details);
+    } catch (error) {
+        fileDetails.innerHTML = `<p class="error-message">${error.message}</p>`;
+    }
 }
 
 function renderFileDetails(details) {
