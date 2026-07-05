@@ -3,13 +3,14 @@ package org.example.uploadservice.controller;
 import org.example.uploadservice.dto.ChunkPageDto;
 import org.example.uploadservice.dto.EmbeddingStatusDto;
 import org.example.uploadservice.dto.FileDetailsDto;
-import org.example.uploadservice.entity.DocumentChunk;
+import org.example.uploadservice.dto.UploadedFileResponseDto;
 import org.example.uploadservice.entity.UploadedFile;
 import org.example.uploadservice.entity.UploadedFileProcessingLog;
 import org.example.uploadservice.repository.DocumentChunkRepository;
 import org.example.uploadservice.repository.UploadedFileProcessingLogRepository;
 import org.example.uploadservice.repository.UploadedFileRepository;
 import org.example.uploadservice.service.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -51,9 +52,11 @@ public class FileUploadController {
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
-        String result = fileStorageService.store(file);
-        return ResponseEntity.ok(result);
+    public ResponseEntity<UploadedFileResponseDto> uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
+        UploadedFile uploadedFile = fileStorageService.store(file);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(UploadedFileResponseDto.from(uploadedFile));
     }
 
     @GetMapping("/history")

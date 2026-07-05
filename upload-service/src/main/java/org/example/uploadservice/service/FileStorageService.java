@@ -27,7 +27,7 @@ public class FileStorageService {
         Files.createDirectories(uploadDir);
     }
 
-    public String store(MultipartFile file) throws IOException {
+    public UploadedFile store(MultipartFile file) throws IOException {
         if (file.isEmpty()) {
             throw new IllegalArgumentException("Choose file.");
         }
@@ -50,10 +50,10 @@ public class FileStorageService {
         uploadedFile.setStatus(UploadedFileStatus.UPLOADED);
         uploadedFile.setCreatedAt(LocalDateTime.now());
 
-        repository.save(uploadedFile);
+        UploadedFile savedFile = repository.save(uploadedFile);
 
         processingService.processFile(uploadedFile);
 
-        return "File saved: " + safeFileName;
+        return savedFile;
     }
 }

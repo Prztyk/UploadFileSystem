@@ -8,19 +8,19 @@ async function handleUpload(event) {
     const file = fileInput.files[0];
 
     if (!file) {
-        uploadMessage.textContent = "Please select a file.";
+        showError("Please select a file.")
         return;
     }
 
     uploadMessage.textContent = "Uploading...";
 
     try {
-        const message = await uploadFile(file);
+        const uploadedFile = await uploadFile(file);
 
         uploadMessage.textContent = "";
         fileInput.value = "";
 
-        showSuccess(message || "File uploaded successfully.");
+        showSuccess(`File uploaded successfully: ${uploadedFile.originalFilename}`);
 
         await loadUploadHistory();
         showSection("historySection");

@@ -8,10 +8,10 @@ async function uploadFile(file) {
     });
 
     if (!response.ok) {
-        throw new Error("Upload failed");
+        throw new Error(await parseErrorResponse(response));
     }
 
-    return response.text();
+    return response.json();
 }
 
 async function fetchUploadHistory() {

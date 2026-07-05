@@ -34,7 +34,10 @@ public class UploadProxyController {
                 .retrieve()
                 .body(String.class);
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(response);
     }
 
     @GetMapping("/files/history")
