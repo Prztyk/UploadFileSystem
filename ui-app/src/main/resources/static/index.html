@@ -9,6 +9,11 @@
 
 <h1>File Upload System</h1>
 
+<div id="notificationBanner" class="notification-banner hidden">
+    <span id="notificationMessage"></span>
+    <button id="notificationCloseButton" type="button">×</button>
+</div>
+
 <nav class="menu">
     <button data-section="uploadSection">Upload</button>
     <button data-section="historySection">Upload history</button>
@@ -90,6 +95,7 @@
 </section>
 
 <script src="/js/api.js"></script>
+<script src="/js/notifications.js"></script>
 <script src="/js/navigation.js"></script>
 <script src="/js/upload.js"></script>
 <script src="/js/history.js"></script>

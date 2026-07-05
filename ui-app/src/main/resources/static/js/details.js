@@ -16,7 +16,8 @@ async function openFileDetails(fileId) {
         const details = await fetchFileDetails(fileId);
         renderFileDetails(details);
     } catch (error) {
-        fileDetails.innerHTML = `<p class="error-message">${error.message}</p>`;
+        fileDetails.innerHTML = "<p>Could not load file details.</p>";
+        showError(error.message);
     }
 }
 
@@ -57,11 +58,16 @@ async function loadChunksPage(fileId, page) {
 
     chunksContainer.innerHTML = "<h3>Chunks</h3><p>Loading chunks...</p>";
 
-    const chunkPage = await fetchFileChunks(fileId, page, chunksPageSize);
+    try {
+        const chunkPage = await fetchFileChunks(fileId, page, chunksPageSize);
 
-    currentChunksPage = chunkPage.page;
+        currentChunksPage = chunkPage.page;
 
-    renderChunksPage(chunkPage);
+        renderChunksPage(chunkPage);
+    } catch (error) {
+        chunksContainer.innerHTML = "<h3>Chunks</h3><p>Could not load chunks.</p>";
+        showError(error.message);
+    }
 }
 
 function renderChunksPage(chunkPage) {

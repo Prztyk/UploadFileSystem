@@ -7,13 +7,22 @@ const searchResults = document.getElementById("searchResults");
 async function handleSearch(event) {
     event.preventDefault();
 
-    const results = await searchDocuments(
-        searchQuery.value,
-        searchLimit.value,
-        minSimilarity.value
-    );
+    try {
+        const results = await searchDocuments(
+            searchQuery.value,
+            searchLimit.value,
+            minSimilarity.value
+        );
 
-    renderSearchResults(results);
+        renderSearchResults(results);
+
+        if (results.length === 0) {
+            showInfo("Search completed. No results found.");
+        }
+
+    } catch (error) {
+        showError(error.message);
+    }
 }
 
 function renderSearchResults(results) {

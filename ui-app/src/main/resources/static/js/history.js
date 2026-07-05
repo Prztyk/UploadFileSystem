@@ -39,9 +39,15 @@ async function handleReprocessFile(fileId) {
         return;
     }
 
-    await reprocessFile(fileId);
-    await loadUploadHistory();
-    await openFileDetails(fileId);
+    try {
+        await reprocessFile(fileId);
+        showSuccess(`File ${fileId} uploaded successfully. Reprocessing started.`);
+
+        await loadUploadHistory();
+        await openFileDetails(fileId);
+    } catch (error) {
+        showError(error.message);
+    }
 }
 
 async function handleDeleteFile(fileId) {
@@ -51,9 +57,15 @@ async function handleDeleteFile(fileId) {
         return;
     }
 
-    await deleteFile(fileId);
-    await loadUploadHistory();
+    try {
+        await deleteFile(fileId);
+        showSuccess(`File ${fileId} deleted successfully.`);
 
-    fileDetails.innerHTML = "<p>Select a file from upload history.</p>";
-    showSection("historySection");
+        await loadUploadHistory();
+
+        fileDetails.innerHTML = "<p>Select a file from upload history.</p>";
+        showSection("historySection");
+    } catch (error) {
+        showError(error.message)
+    }
 }

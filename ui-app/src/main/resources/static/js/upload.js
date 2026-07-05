@@ -16,12 +16,16 @@ async function handleUpload(event) {
 
     try {
         const message = await uploadFile(file);
-        uploadMessage.textContent = message;
+
+        uploadMessage.textContent = "";
         fileInput.value = "";
+
+        showSuccess(message || "File uploaded successfully.");
 
         await loadUploadHistory();
         showSection("historySection");
     } catch (error) {
-        uploadMessage.textContent = error.message;
+        uploadMessage.textContent = "";
+        showError(error.message)
     }
 }

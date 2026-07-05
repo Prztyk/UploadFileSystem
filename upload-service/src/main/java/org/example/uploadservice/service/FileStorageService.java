@@ -29,7 +29,7 @@ public class FileStorageService {
 
     public String store(MultipartFile file) throws IOException {
         if (file.isEmpty()) {
-            throw new IllegalArgumentException("Nie wybrano pliku.");
+            throw new IllegalArgumentException("Choose file.");
         }
 
         String originalName = file.getOriginalFilename();
@@ -54,6 +54,6 @@ public class FileStorageService {
 
         processingService.processFile(uploadedFile);
 
-        return "Plik zapisany: " + safeFileName;
+        return "File saved: " + safeFileName;
     }
 }
