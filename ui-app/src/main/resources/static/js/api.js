@@ -79,10 +79,23 @@ async function fetchFileChunks(fileId, page, size) {
 }
 
 async function parseErrorResponse(response) {
+    const fallbackMessage = `Request failed with status ${response.status}`;
+
     try {
-        const errorBody = await response.json();
-        return errorBody.message ?? "Request failed";
+        const contentType = response.headers.get("content-type") ?? "";
+
+        if (contentType.includes("application/json")) {
+            const errorBody = await response.json();
+
+            return errorBody.message
+                ?? errorBody.error
+                ?? fallbackMessage;
+        }
+
+        const text = await response.text();
+
+        return text || fallbackMessage;
     } catch (error) {
-        return "Request failed";
+        return fallbackMessage;
     }
 }
