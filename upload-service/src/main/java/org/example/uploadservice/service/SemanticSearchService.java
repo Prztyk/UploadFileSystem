@@ -12,21 +12,26 @@ public class SemanticSearchService {
     private final JdbcTemplate jdbcTemplate;
     private final EmbeddingGenerationService embeddingGenerationService;
     private final PgVectorFormatService pgVectorFormatService;
+    private final SearchQueryAnalyzerService searchQueryAnalyzerService;
 
     public SemanticSearchService(
             JdbcTemplate jdbcTemplate,
             EmbeddingGenerationService embeddingGenerationService,
-            PgVectorFormatService pgVectorFormatService
+            PgVectorFormatService pgVectorFormatService,
+            SearchQueryAnalyzerService searchQueryAnalyzerService
     ) {
         this.jdbcTemplate = jdbcTemplate;
         this.embeddingGenerationService = embeddingGenerationService;
         this.pgVectorFormatService = pgVectorFormatService;
+        this.searchQueryAnalyzerService = searchQueryAnalyzerService;
     }
 
     public List<SemanticSearchResultDto> search(String query, int limit, double minSimilarity) {
         List<Double> queryEmbedding = embeddingGenerationService.generateEmbedding(query);
         String queryVector = pgVectorFormatService.toPgVectorValue(queryEmbedding);
         String modelName = embeddingGenerationService.getModelName();
+
+        boolean requireLexicalMatch = searchQueryAnalyzerService.shouldRequireLexicalMatch(query);
 
         return jdbcTemplate.query(
                 """
@@ -93,9 +98,23 @@ public class SemanticSearchService {
                     exact_phrase_match,
                     hybrid_score
                 FROM scored_chunks
-                WHERE similarity_score >= ?
-                   OR lexical_score > 0
-                   OR exact_phrase_match = true
+                WHERE
+                    (
+                        ? = true
+                        AND (
+                            lexical_score > 0
+                            OR exact_phrase_match = true
+                        )
+                    )
+                    OR
+                    (
+                        ? = false
+                        AND (
+                            similarity_score >= ?
+                            OR lexical_score > 0
+                            OR exact_phrase_match = true
+                        )
+                    )
                 ORDER BY hybrid_score DESC
                 LIMIT ?
                 """,
@@ -117,6 +136,8 @@ public class SemanticSearchService {
                 query,
                 query,
                 modelName,
+                requireLexicalMatch,
+                requireLexicalMatch,
                 minSimilarity,
                 limit
         );
