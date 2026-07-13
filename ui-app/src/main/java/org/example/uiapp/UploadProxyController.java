@@ -136,4 +136,16 @@ public class UploadProxyController {
 
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/answers")
+    public ResponseEntity<String> answerQuestion(@RequestBody String requestBody) {
+        String response = restClient.post()
+                .uri("/api/answers")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(requestBody)
+                .retrieve()
+                .body(String.class);
+
+        return ResponseEntity.ok(response);
+    }
 }

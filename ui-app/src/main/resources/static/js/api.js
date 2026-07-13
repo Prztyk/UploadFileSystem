@@ -99,3 +99,23 @@ async function parseErrorResponse(response) {
         return fallbackMessage;
     }
 }
+
+async function answerQuestion(question, limit, minSimilarity) {
+    const response = await fetch("/answers", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            question: question,
+            limit: Number(limit),
+            minSimilarity: Number(minSimilarity)
+        })
+    });
+
+    if (!response.ok) {
+        throw new Error(await parseErrorResponse(response));
+    }
+
+    return response.json();
+}
