@@ -42,12 +42,13 @@ function renderSearchResults(results) {
         <tr>
             <th>File</th>
             <th>Chunk</th>
+            <th>Mode</th>
+            <th>Match</th>            
             <th>Similarity</th>
             <th>Distance</th>
             <th>Lexical</th>
             <th>Exact phrase</th>
             <th>Hybrid</th>
-            <th>Content</th>
         </tr>
         </thead>
         <tbody></tbody>
@@ -61,11 +62,13 @@ function renderSearchResults(results) {
         row.innerHTML = `
             <td>${result.originalFilename}</td>
             <td>${result.chunkIndex}</td>
-            <td>${result.similarityScore.toFixed(4)}</td>
-            <td>${result.distance.toFixed(4)}</td>
-            <td>${result.lexicalScore.toFixed(4)}</td>
+            <td>${result.searchMode}</td>
+            <td>${result.matchType}</td>
+            <td>${formatNumber(result.similarityScore)}</td>
+            <td>${formatNumber(result.distance)}</td>
+            <td>${formatNumber(result.lexicalScore)}</td>
             <td>${result.exactPhraseMatch ? "Yes" : "No"}</td>
-            <td>${result.hybridScore.toFixed(4)}</td>
+            <td>${formatNumber(result.hybridScore)}</td>
             <td>
                 ${renderContextBlock("Previous chunk", result.previousContent)}
                 ${renderContextBlock("Matching chunk", result.content)}
@@ -90,4 +93,12 @@ function renderContextBlock(title, content) {
             <pre>${content}</pre>
         </div>
     `;
+}
+
+function formatNumber(value) {
+    if (value === null || value === undefined) {
+        return "-";
+    }
+
+    return value.toFixed(4);
 }
