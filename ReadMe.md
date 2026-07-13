@@ -115,8 +115,65 @@ next i added full-text-search to have
 hybrid score =
     semantic score * 0.7
  +  lexical score * 0.25
- +  phrase bonus
+   +  phrase bonus
 (commit: 592d046cde8036d7f1dd3cc36bf2409ead79aeac)
+Next step was to add search query analyzer service
+Examples:
+diablo456766
+ABC123
+v4.7.2
+iis_deploy.bat
+Oracle19c
+some-api-key-like-value
+For these queries, semantic search is dangerous. If the exact/code-like term does not exist, the app should return nothing.
+So right now i have `semantic score` + `lexical score` + `query type`
+So for `diablo456766`:  
+    requireLexicalMatch = true
+    lexicalScore = 0
+    exactPhraseMatch = false
+    => result filtered out
+For `Entire Agreement`:  
+    requireLexicalMatch = false
+    hybrid search works normally
+(commit: a5268784a95392a6f08b12d3b1a3721d8ee896c3)
+
+summary:
+
+The search pipeline works like this:
+
+User query
+-> generate query embedding with Ollama
+-> search document chunk embeddings in PostgreSQL/pgvector
+-> combine semantic similarity with PostgreSQL full-text search
+-> boost exact phrase matches
+-> return ranked chunks with surrounding context
+
+I store embeddings in PostgreSQL using pgvector, then search them with cosine distance:
+
+embedding <=> query_vector
+
+Later I improved pure vector search into hybrid search by adding:
+
+semantic similarity
+lexical full-text score
+exact phrase match
+hybrid score
+
+So the result ranking is no longer based only on vector similarity.
+
+I also added nearby context to search results:
+
+previous chunk
+matching chunk
+next chunk
+
+This makes results easier to understand when text is split between chunks.
+
+Important lesson: pure semantic search always returns the “nearest” chunk, even for nonsense queries like:
+
+diablo456766
+
+So I added the idea of query analysis: for code-like, identifier-like, or random-looking queries, the search should require lexical or exact matches instead of trusting semantic similarity alone.
 
 2. HNSW index
 Use EXPLAIN ANALYZE

@@ -12,6 +12,8 @@ public record SemanticSearchResultDto(
         Double similarityScore,
         Double lexicalScore,
         Boolean exactPhraseMatch,
-        Double hybridScore
+        Double hybridScore,
+        String searchMode,
+        String matchType
 ) {
 }
