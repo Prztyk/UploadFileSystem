@@ -30,8 +30,7 @@ function renderAnswerResponse(response) {
     answerTitle.textContent = "Answer";
     answerResults.appendChild(answerTitle);
 
-    const answerBlock = document.createElement("pre");
-    answerBlock.textContent = response.answer;
+    const answerBlock = renderAnswerWithSourceLinks(response.answer, response.sources);
     answerResults.appendChild(answerBlock);
 
     const sourcesTitle = document.createElement("h3");
@@ -58,6 +57,7 @@ function renderAnswerResponse(response) {
             <th>Mode</th>
             <th>Match</th>
             <th>Hybrid score</th>
+            <th>Action</th>
         </tr>
         </thead>
         <tbody></tbody>
@@ -75,6 +75,11 @@ function renderAnswerResponse(response) {
             <td>${source.searchMode}</td>
             <td>${source.matchType}</td>
             <td>${formatNullableNumber(source.hybridScore)}</td>
+            <td>
+                <button type="button" onclick="openSourceChunk(${source.fileId}, ${source.chunkIndex})">
+                    Open chunk
+                </button>
+            </td>            
         `;
 
         tbody.appendChild(row);
@@ -89,4 +94,51 @@ function formatNullableNumber(value) {
     }
 
     return value.toFixed(4);
+}
+
+function renderAnswerWithSourceLinks(answer, sources) {
+    const block = document.createElement("pre");
+
+    const sourcesByNumber = new Map();
+
+    for (const source of sources) {
+        sourcesByNumber.set(String(source.sourceNumber), source);
+    }
+
+    const sourcePattern = /\[source\s+(\d+)]/gi;
+
+    let lastIndex = 0;
+    let match;
+
+    while ((match = sourcePattern.exec(answer)) !== null) {
+        const sourceNumber = match[1];
+        const source = sourcesByNumber.get(sourceNumber);
+
+        block.appendChild(
+            document.createTextNode(answer.substring(lastIndex, match.index))
+        );
+
+        if (source) {
+            const link = document.createElement("a");
+            link.href = "#";
+            link.className = "source-link";
+            link.textContent = match[0];
+
+            link.addEventListener("click", async function (event) {
+                event.preventDefault();
+
+                await openSourceChunk(source.fileId, source.chunkIndex);
+            });
+
+            block.appendChild(link);
+        } else {
+            block.appendChild(document.createTextNode(match[0]));
+        }
+
+        lastIndex = sourcePattern.lastIndex;
+    }
+
+    block.appendChild(document.createTextNode(answer.substring(lastIndex)));
+
+    return block;
 }

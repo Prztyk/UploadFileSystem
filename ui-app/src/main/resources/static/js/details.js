@@ -53,7 +53,7 @@ function renderChunksPlaceholder(fileId) {
     return container;
 }
 
-async function loadChunksPage(fileId, page) {
+async function loadChunksPage(fileId, page, highlightedChunkIndex = null) {
     const chunksContainer = document.getElementById("chunksContainer");
 
     chunksContainer.innerHTML = "<h3>Chunks</h3><p>Loading chunks...</p>";
@@ -63,14 +63,14 @@ async function loadChunksPage(fileId, page) {
 
         currentChunksPage = chunkPage.page;
 
-        renderChunksPage(chunkPage);
+        renderChunksPage(chunkPage, highlightedChunkIndex);
     } catch (error) {
         chunksContainer.innerHTML = "<h3>Chunks</h3><p>Could not load chunks.</p>";
         showError(error.message);
     }
 }
 
-function renderChunksPage(chunkPage) {
+function renderChunksPage(chunkPage, highlightedChunkIndex = null) {
     const chunksContainer = document.getElementById("chunksContainer");
 
     chunksContainer.innerHTML = "";
@@ -95,14 +95,32 @@ function renderChunksPage(chunkPage) {
         return;
     }
 
+    let highlightedBlock = null;
+
     for (const chunk of chunkPage.chunks) {
         const block = document.createElement("pre");
+        block.className = "chunk-block";
         block.textContent = `Chunk ${chunk.chunkIndex}\n\n${chunk.content}`;
+
+        if (chunk.chunkIndex === highlightedChunkIndex) {
+            block.classList.add("selected-chunk");
+            highlightedBlock = block;
+        }
+
         chunksContainer.appendChild(block);
     }
 
     const controlsBottom = renderChunkPaginationControls(chunkPage);
     chunksContainer.appendChild(controlsBottom);
+
+    if (highlightedBlock !== null) {
+        setTimeout(function () {
+            highlightedBlock.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+        }, 0);
+    }
 }
 
 function renderChunkPaginationControls(chunkPage) {
@@ -285,4 +303,12 @@ function renderChunksSection(chunks) {
     }
 
     return container;
+}
+
+async function openSourceChunk(fileId, chunkIndex) {
+    await openFileDetails(fileId);
+
+    const page = Math.floor(chunkIndex / chunksPageSize);
+
+    await loadChunksPage(fileId, page, chunkIndex);
 }
