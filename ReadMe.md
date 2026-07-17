@@ -1,3 +1,51 @@
+Upload file flow:
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Browser
+    participant UI as ui-app
+    participant Upload as upload-service
+    participant DB as PostgreSQL + pgvector
+    participant Disk as uploads/
+    participant Tika
+    participant Ollama
+
+    User->>Browser: Select file and click Upload
+    Browser->>UI: POST /upload multipart
+    UI->>Upload: POST /api/files/upload multipart
+
+    Upload->>Disk: Save physical file
+    Upload->>DB: Insert uploaded_files metadata
+    Upload-->>UI: 201 Created + UploadedFileResponseDto
+    UI-->>Browser: 201 Created + JSON
+    Browser->>Browser: Show success notification
+    Browser->>UI: Refresh upload history
+
+    Upload->>Upload: Start async processing
+    Upload->>DB: Update status PROCESSING
+    Upload->>DB: Insert processing started log
+
+    Upload->>Tika: Extract text
+    Tika-->>Upload: Extracted text
+
+    Upload->>Upload: Split text into chunks
+    Upload->>DB: Insert document_chunks
+
+    loop For each chunk
+        Upload->>Ollama: Generate embedding
+        Ollama-->>Upload: Embedding vector
+        Upload->>DB: Insert document_chunk_embeddings
+    end
+
+    Upload->>DB: Update status PROCESSED
+    Upload->>DB: Insert processing completed log
+
+    alt Processing fails
+        Upload->>DB: Update status FAILED
+        Upload->>DB: Insert failure log with stack trace
+    end
+```
 Browser flow:
 
     Browser
