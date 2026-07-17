@@ -5,6 +5,7 @@ import java.util.List;
 public record AnswerResponseDto(
         String question,
         String answer,
-        List<AnswerSourceDto> sources
+        List<AnswerSourceDto> sources,
+        AnswerTokenUsageDto tokenUsage
 ) {
 }

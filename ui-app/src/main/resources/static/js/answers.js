@@ -74,7 +74,7 @@ function renderAnswerResponse(response) {
             <td>${source.chunkIndex}</td>
             <td>${source.searchMode}</td>
             <td>${source.matchType}</td>
-            <td>${formatNullableNumber(source.hybridScore)}</td>
+            <td>${formatNullableDecimal(source.hybridScore)}</td>
             <td>
                 <button type="button" onclick="openSourceChunk(${source.fileId}, ${source.chunkIndex})">
                     Open chunk
@@ -86,14 +86,23 @@ function renderAnswerResponse(response) {
     }
 
     answerResults.appendChild(table);
+    answerResults.appendChild(renderTokenUsage(response.tokenUsage))
 }
 
-function formatNullableNumber(value) {
+function formatNullableDecimal(value) {
     if (value === null || value === undefined) {
         return "-";
     }
 
     return value.toFixed(4);
+}
+
+function formatNullableInteger(value) {
+    if (value === null || value === undefined) {
+        return "-";
+    }
+
+    return value;
 }
 
 function renderAnswerWithSourceLinks(answer, sources) {
@@ -141,4 +150,63 @@ function renderAnswerWithSourceLinks(answer, sources) {
     block.appendChild(document.createTextNode(answer.substring(lastIndex)));
 
     return block;
+}
+
+function renderTokenUsage(tokenUsage) {
+    const container = document.createElement("div");
+
+    const title = document.createElement("h3");
+    title.textContent = "Token usage";
+    container.appendChild(title);
+
+    if (!tokenUsage) {
+        const empty = document.createElement("p");
+        empty.textContent = "No token usage available.";
+        container.appendChild(empty);
+        return container;
+    }
+
+    const table = document.createElement("table");
+    table.border = "1";
+    table.cellPadding = "6";
+
+    table.innerHTML = `
+        <tbody>
+        <tr>
+            <th>Input tokens</th>
+            <td>${formatNullableInteger(tokenUsage.inputTokens)}</td>
+        </tr>
+        <tr>
+            <th>Output tokens</th>
+            <td>${formatNullableInteger(tokenUsage.outputTokens)}</td>
+        </tr>
+        <tr>
+            <th>Total tokens</th>
+            <td>${formatNullableInteger(tokenUsage.totalTokens)}</td>
+        </tr>
+        <tr>
+            <th>Total duration</th>
+            <td>${formatNullableDuration(tokenUsage.totalDurationMs)}</td>
+        </tr>
+        <tr>
+            <th>Prompt evaluation duration</th>
+            <td>${formatNullableDuration(tokenUsage.promptEvalDurationMs)}</td>
+        </tr>
+        <tr>
+            <th>Generation duration</th>
+            <td>${formatNullableDuration(tokenUsage.evalDurationMs)}</td>
+        </tr>
+        </tbody>
+    `;
+
+    container.appendChild(table);
+    return container;
+}
+
+function formatNullableDuration(value) {
+    if (value === null || value === undefined) {
+        return "-";
+    }
+
+    return `${value} ms`;
 }

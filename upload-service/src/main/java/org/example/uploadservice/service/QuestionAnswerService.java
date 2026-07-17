@@ -1,9 +1,6 @@
 package org.example.uploadservice.service;
 
-import org.example.uploadservice.dto.AnswerRequestDto;
-import org.example.uploadservice.dto.AnswerResponseDto;
-import org.example.uploadservice.dto.AnswerSourceDto;
-import org.example.uploadservice.dto.SemanticSearchResultDto;
+import org.example.uploadservice.dto.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -46,19 +43,21 @@ public class QuestionAnswerService {
             return new AnswerResponseDto(
                     question,
                     "I could not find enough information in the uploaded documents to answer this question.",
-                    sources
+                    sources,
+                    null
             );
         }
 
         String systemPrompt = buildSystemPrompt();
         String userPrompt = buildUserPrompt(question, searchResults);
 
-        String answer = ollamaChatService.generateAnswer(systemPrompt, userPrompt);
+        OllamaAnswerDto ollamaAnswer = ollamaChatService.generateAnswer(systemPrompt, userPrompt);
 
         return new AnswerResponseDto(
                 question,
-                answer,
-                sources
+                ollamaAnswer.answer(),
+                sources,
+                ollamaAnswer.tokenUsage()
         );
     }
 
